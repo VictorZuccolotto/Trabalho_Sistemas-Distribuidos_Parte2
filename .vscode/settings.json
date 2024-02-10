@@ -1,0 +1,6 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.jdt.ls.java.home": "/usr/lib/jvm/java-17-openjdk",
+    "maven.terminal.useJavaHome": true
+}
