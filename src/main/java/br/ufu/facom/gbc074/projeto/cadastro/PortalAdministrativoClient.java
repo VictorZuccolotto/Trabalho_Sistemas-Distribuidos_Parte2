@@ -28,7 +28,7 @@ public class PortalAdministrativoClient {
 	  }
 
 	  public void createAluno(String nome, String matricula) {
-		  mutex = 1;
+		mutex = 1;
 	    logger.info("Criando aluno "+ "<"+ matricula+"> " + nome);
 	    Aluno request= Aluno.newBuilder().setNome(nome).setMatricula(matricula).build();
 	    Status response;
@@ -93,7 +93,6 @@ public class PortalAdministrativoClient {
 		  logger.info("Obtendo alunos");
 		  Vazia request = Vazia.newBuilder().build();
 		  Iterator<Aluno> response;
-		  StringBuilder dados = null;
 		  try {
 			  response = blockingStub.obtemTodosAlunos(request);
 			  while(response.hasNext()) {
@@ -107,10 +106,163 @@ public class PortalAdministrativoClient {
 		  mutex = 0;
 	  }
 
+	  public void createProfessor(String nome, String siape) {
+		  mutex = 1;
+		  logger.info("Criando professor "+ "<"+ siape+"> " + nome);
+		  Professor request= Professor.newBuilder().setNome(nome).setSiape(siape).build();
+		  Status response;
+		  try {
+			  response = blockingStub.novoProfessor(request);
+		  } catch (StatusRuntimeException e) {
+			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+			  return;
+		  }
+		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
+		  mutex = 0;
+	  }
+	  
+	  public void updateProfessor(String nome, String siape) {
+		  mutex = 1;
+		  logger.info("Editando professor "+ "<"+ siape+"> " + nome);
+		  Professor request= Professor.newBuilder().setNome(nome).setSiape(siape).build();
+		  Status response;
+		  try {
+			  response = blockingStub.editaProfessor(request);
+		  } catch (StatusRuntimeException e) {
+			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+			  return;
+		  }
+		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
+		  mutex = 0;
+	  }
+	  
+	  public void deleteProfessor(String id) {
+		  mutex = 1;
+		  logger.info("Deletando professor "+ "<"+ id+"> ");
+		  Identificador request= Identificador.newBuilder().setId(id).build();
+		  Status response;
+		  try {
+			  response = blockingStub.removeProfessor(request);
+		  } catch (StatusRuntimeException e) {
+			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+			  return;
+		  }
+		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
+		  mutex = 0;
+	  }
+	  
+	  public void readProfessor(String id) {
+		  mutex = 1;
+		  logger.info("Obtendo professor "+ "<"+ id+"> ");
+		  Identificador request= Identificador.newBuilder().setId(id).build();
+		  Professor response;
+		  try {
+			  response = blockingStub.obtemProfessor(request);
+		  } catch (StatusRuntimeException e) {
+			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+			  return;
+		  }
+		  System.out.println(response);
+		  mutex = 0;
+	  }
+	  
+	  public void readAllProfessores() {
+		  mutex = 1;
+		  logger.info("Obtendo professores");
+		  Vazia request = Vazia.newBuilder().build();
+		  Iterator<Professor> response;
+		  try {
+			  response = blockingStub.obtemTodosProfessores(request);
+			  while(response.hasNext()) {
+				  System.out.println(response.next());
+			  }
+		  } catch (StatusRuntimeException e) {
+			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+			  return;
+		  }
+		  mutex = 0;
+	  }
+	  
+	  public void createDisciplina(String nome, String sigla, int vagas) {
+		  mutex = 1;
+		  logger.info("Criando disciplina "+ "<"+ sigla+"> " + nome);
+		  Disciplina request= Disciplina.newBuilder().setNome(nome).setSigla(sigla).setVagas(vagas).build();
+		  Status response;
+		  try {
+			  response = blockingStub.novaDisciplina(request);
+		  } catch (StatusRuntimeException e) {
+			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+			  return;
+		  }
+		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
+		  mutex = 0;
+	  }
+	  
+	  public void updateDisciplina(String nome, String sigla, int vagas) {
+		  mutex = 1;
+		  logger.info("Editando disciplina "+ "<"+ sigla+"> " + nome);
+		  Disciplina request= Disciplina.newBuilder().setNome(nome).setSigla(sigla).setVagas(vagas).build();
+		  Status response;
+		  try {
+			  response = blockingStub.editaDisciplina(request);
+		  } catch (StatusRuntimeException e) {
+			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+			  return;
+		  }
+		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
+		  mutex = 0;
+	  }
+	  
+	  public void deleteDisciplina(String id) {
+		  mutex = 1;
+		  logger.info("Deletando disciplina "+ "<"+ id+"> ");
+		  Identificador request= Identificador.newBuilder().setId(id).build();
+		  Status response;
+		  try {
+			  response = blockingStub.removeDisciplina(request);
+		  } catch (StatusRuntimeException e) {
+			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+			  return;
+		  }
+		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
+		  mutex = 0;
+	  }
+	  
+	  public void readDisciplina(String id) {
+		  mutex = 1;
+		  logger.info("Obtendo disciplina "+ "<"+ id+"> ");
+		  Identificador request= Identificador.newBuilder().setId(id).build();
+		  Disciplina response;
+		  try {
+			  response = blockingStub.obtemDisciplina(request);
+		  } catch (StatusRuntimeException e) {
+			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+			  return;
+		  }
+		  System.out.println(response);
+		  mutex = 0;
+	  }
+	  
+	  public void readAllDisciplina() {
+		  mutex = 1;
+		  logger.info("Obtendo disciplinas");
+		  Vazia request = Vazia.newBuilder().build();
+		  Iterator<Disciplina> response;
+		  try {
+			  response = blockingStub.obtemTodasDisciplinas(request);
+			  while(response.hasNext()) {
+				  System.out.println(response.next());
+			  }
+		  } catch (StatusRuntimeException e) {
+			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+			  return;
+		  }
+		  mutex = 0;
+	  }
+	  
 
 	  public static void main(String[] args) throws Exception {
 	    String user = "Dedin";
-	    String matricula = "11811BCC034";
 	    List<String> users = Arrays.asList("world", "sistemas", "distribuidos", "paulo");
 	    String target = "localhost:50051";
 
@@ -186,6 +338,75 @@ public class PortalAdministrativoClient {
 			break;
 		case 5:
 			this.readAllAlunos();
+			while(mutex != 0) {}
+			break;
+		case 6:
+			System.out.println("Digite o nome do professor:");
+			nome = scan.next();
+			System.out.println("Digite o siape do professor:");
+			String siape = scan.next();
+			this.createProfessor(nome,siape);
+			while(mutex != 0) {}
+			break;
+		case 7:
+			System.out.println("Digite o nome do professor:");
+			nome = scan.next();
+			System.out.println("Digite o siape do professor:");
+			siape = scan.next();
+			this.updateProfessor(nome,siape);
+			while(mutex != 0) {}
+			break;
+		case 8:
+			System.out.println("Digite o siape do professor:");
+			siape = scan.next();
+			this.deleteProfessor(siape);
+			while(mutex != 0) {}
+			break;
+		case 9:
+			System.out.println("Digite o siape do professor:");
+			siape = scan.next();
+			this.readProfessor(siape);
+			while(mutex != 0) {}
+			break;
+		case 10:
+			this.readAllProfessores();
+			while(mutex != 0) {}
+			break;
+		case 11:
+			System.out.println("Digite o nome da disciplina:");
+			nome = scan.next();
+			System.out.println("Digite a sigla da disciplina:");
+			String sigla = scan.next();
+			System.out.println("Digite o limite de alunos da disciplina:");
+			int vagas = scan.nextInt();
+			this.createDisciplina(nome,sigla,vagas);
+			while(mutex != 0) {}
+			break;
+		case 12:
+			System.out.println("Digite o nome da disciplina:");
+			nome = scan.next();
+			System.out.println("Digite a sigla da disciplina:");
+			sigla = scan.next();
+			System.out.println("Digite o limite de alunos da disciplina:");
+			vagas = scan.nextInt();
+			this.updateDisciplina(nome,sigla,vagas);
+			while(mutex != 0) {}
+			break;
+		case 13:
+			System.out.println("Digite a sigla da disciplina:");
+			sigla = scan.next();
+			this.deleteDisciplina(sigla);
+			while(mutex != 0) {}
+			break;
+		case 14:
+			System.out.println("Digite a sigla da disciplina:");
+			sigla = scan.next();
+			this.readDisciplina(sigla);
+			while(mutex != 0) {}
+			break;
+		case 15:
+			this.readAllDisciplina();
+			while(mutex != 0) {}
 			break;
 		default:
 			System.out.println("Digite uma opção válida");

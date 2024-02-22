@@ -1,3 +1,10 @@
+TODO
+
+[x] - CRUD Sistema Administrativo e Matricula
+[] - MQTT para comunicar com Sistema Matricula e vice versa
+[] - MQTT para comunicar com mais de uma instancia de servidor
+
+
 gRPC Examples
 ==============================================
 
