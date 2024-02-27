@@ -5,8 +5,16 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import br.ufu.facom.gbc074.projeto.bd.Banco;
 import br.ufu.facom.gbc074.projeto.bd.model.DisciplinaModel;
+import br.ufu.facom.gbc074.projeto.mqtt.MqttConfig;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -15,6 +23,10 @@ public class PortalAdministrativoServer {
 	  private static final Logger logger = Logger.getLogger(PortalAdministrativoServer.class.getName());
 
 	  private Server server;
+	  
+	  public static MqttConfig mqtt;
+
+	  public static Gson gson = new Gson();
 
 	  private void start() throws IOException {
 	    /* The port on which the server should run */
@@ -60,7 +72,13 @@ public class PortalAdministrativoServer {
 	   * Main launches the server from the command line.
 	   */
 	  public static void main(String[] args) throws IOException, InterruptedException {
+		int port = 50051;
 	    final PortalAdministrativoServer server = new PortalAdministrativoServer();
+	    try {
+			server.mqtt = new MqttConfig(String.valueOf(port));
+		} catch (MqttException e) {
+			e.printStackTrace();
+		}
 	    server.start();
 	    server.blockUntilShutdown();
 	  }
@@ -83,6 +101,18 @@ public class PortalAdministrativoServer {
 				Banco.alunos.put(matricula,nome);
 				Banco.alunoDisciplinas.put(matricula, new ArrayList<String>());
 				code = 0;
+				//Json
+				JsonObject jsonObject = new JsonObject();
+				jsonObject.addProperty("matricula", matricula);
+				jsonObject.addProperty("nome", nome);
+				//Mqtt
+				try {
+					PortalAdministrativoServer.mqtt.cliente.publish("aluno/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+				} catch (MqttPersistenceException e) {
+					e.printStackTrace();
+				} catch (MqttException e) {
+					e.printStackTrace();
+				}
 			}else{
 				code = 1;
 				errorMsg = "Nome ou matricula menor que 4";
@@ -108,6 +138,18 @@ public class PortalAdministrativoServer {
 				//Salvar no bd
 				Banco.alunos.put(matricula,nome);
 				code = 0;
+				//Json
+				JsonObject jsonObject = new JsonObject();
+				jsonObject.addProperty("matricula", matricula);
+				jsonObject.addProperty("nome", nome);
+				//Mqtt
+				try {
+					PortalAdministrativoServer.mqtt.cliente.publish("aluno/update", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+				} catch (MqttPersistenceException e) {
+					e.printStackTrace();
+				} catch (MqttException e) {
+					e.printStackTrace();
+				}
 			}else{
 				code = 1;
 				errorMsg = "Nome menor que 4";
@@ -135,6 +177,17 @@ public class PortalAdministrativoServer {
 				Banco.alunos.remove(matricula);
 				code = 0;
 				errorMsg = "";
+				//Json
+				JsonObject jsonObject = new JsonObject();
+				jsonObject.addProperty("matricula", matricula);
+				//Mqtt
+				try {
+					PortalAdministrativoServer.mqtt.cliente.publish("aluno/remove", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+				} catch (MqttPersistenceException e) {
+					e.printStackTrace();
+				} catch (MqttException e) {
+					e.printStackTrace();
+				}
 			}
 			Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 			responseObserver.onNext(status);
@@ -185,6 +238,18 @@ public class PortalAdministrativoServer {
 					  Banco.professores.put(siape,nome);
 					  Banco.professorDisciplinas.put(siape, new ArrayList<String>());
 					  code = 0;
+					  //Json
+					  JsonObject jsonObject = new JsonObject();
+					  jsonObject.addProperty("siape", siape);
+					  jsonObject.addProperty("nome", nome);
+					  //Mqtt
+					  try {
+						PortalAdministrativoServer.mqtt.cliente.publish("professor/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+					  } catch (MqttPersistenceException e) {
+						e.printStackTrace();
+					  } catch (MqttException e) {
+						e.printStackTrace();
+					  }
 				  }else{
 					  code = 1;
 					  errorMsg = "Nome ou siape menor que 4";
@@ -209,6 +274,18 @@ public class PortalAdministrativoServer {
 					  //Salvar no bd
 					  Banco.professores.put(siape,nome);
 					  code = 0;
+						//Json
+						JsonObject jsonObject = new JsonObject();
+						jsonObject.addProperty("siape", siape);
+						jsonObject.addProperty("nome", nome);
+						//Mqtt
+						try {
+							PortalAdministrativoServer.mqtt.cliente.publish("professor/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+						} catch (MqttPersistenceException e) {
+							e.printStackTrace();
+						} catch (MqttException e) {
+							e.printStackTrace();
+						}
 				  }else{
 					  code = 1;
 					  errorMsg = "Nome menor que 4";
@@ -235,6 +312,16 @@ public class PortalAdministrativoServer {
 					Banco.professores.remove(siape);
 					code = 0;
 					errorMsg = "";
+					  JsonObject jsonObject = new JsonObject();
+					  jsonObject.addProperty("siape", siape);
+					  //Mqtt
+					  try {
+						PortalAdministrativoServer.mqtt.cliente.publish("aluno/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+					  } catch (MqttPersistenceException e) {
+						e.printStackTrace();
+					  } catch (MqttException e) {
+						e.printStackTrace();
+					  }
 			  }
 			  Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 			  responseObserver.onNext(status);
@@ -286,6 +373,19 @@ public class PortalAdministrativoServer {
 					  Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
 					  Banco.disciplinaAlunos.put(sigla, new ArrayList<String>());
 					  code = 0;
+						//Json
+						JsonObject jsonObject = new JsonObject();
+						jsonObject.addProperty("sigla", sigla);
+						jsonObject.addProperty("nome", nome);
+						jsonObject.addProperty("vagas", vagas);
+						//Mqtt
+						try {
+							PortalAdministrativoServer.mqtt.cliente.publish("disciplina/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+						} catch (MqttPersistenceException e) {
+							e.printStackTrace();
+						} catch (MqttException e) {
+							e.printStackTrace();
+						}
 				  }else{
 					  code = 1;
 					  errorMsg = "Nome ou sigla menor que 4";
@@ -311,6 +411,19 @@ public class PortalAdministrativoServer {
 					  //Salvar no bd
 					  Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
 					  code = 0;
+						//Json
+						JsonObject jsonObject = new JsonObject();
+						jsonObject.addProperty("sigla", sigla);
+						jsonObject.addProperty("nome", nome);
+						jsonObject.addProperty("vagas", vagas);
+						//Mqtt
+						try {
+							PortalAdministrativoServer.mqtt.cliente.publish("disciplina/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+						} catch (MqttPersistenceException e) {
+							e.printStackTrace();
+						} catch (MqttException e) {
+							e.printStackTrace();
+						}
 				  }else{
 					  code = 1;
 					  errorMsg = "Nome menor que 4";
@@ -338,6 +451,17 @@ public class PortalAdministrativoServer {
 					Banco.disciplinas.remove(sigla);
 				  code = 0;
 				  errorMsg = "";
+					//Json
+					JsonObject jsonObject = new JsonObject();
+					jsonObject.addProperty("sigla", sigla);
+					//Mqtt
+					try {
+						PortalAdministrativoServer.mqtt.cliente.publish("disciplina/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+					} catch (MqttPersistenceException e) {
+						e.printStackTrace();
+					} catch (MqttException e) {
+						e.printStackTrace();
+					}
 			  }
 			  Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 			  responseObserver.onNext(status);

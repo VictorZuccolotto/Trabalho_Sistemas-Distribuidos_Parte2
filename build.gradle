@@ -29,6 +29,8 @@ def protocVersion = protobufVersion
 dependencies {
     implementation "io.grpc:grpc-protobuf:${grpcVersion}"
     implementation "io.grpc:grpc-stub:${grpcVersion}"
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+    implementation 'com.google.code.gson:gson:2.10.1'
     compileOnly "org.apache.tomcat:annotations-api:6.0.53"
 
     // examples/advanced need this for JsonFormat
@@ -76,9 +78,39 @@ task helloWorldClient(type: CreateStartScripts) {
     outputDir = new File(project.buildDir, 'tmp/scripts/' + name)
     classpath = startScripts.classpath
 }
+task PortalAdministrativoServer(type: CreateStartScripts) {
+    mainClass = 'br.ufu.facom.gbc074.projeto.cadastro.PortalAdministrativoServer'
+    applicationName = 'portal-administrativo-server'
+    outputDir = new File(project.buildDir, 'tmp/scripts/' + name)
+    classpath = startScripts.classpath
+}
+
+task PortalAdministrativoClient(type: CreateStartScripts) {
+    mainClass = 'br.ufu.facom.gbc074.projeto.cadastro.PortalAdministrativoClient'
+    applicationName = 'portal-administrativo-client'
+    outputDir = new File(project.buildDir, 'tmp/scripts/' + name)
+    classpath = startScripts.classpath
+}
+task PortalMatriculaServer(type: CreateStartScripts) {
+    mainClass = 'br.ufu.facom.gbc074.projeto.matricula.PortalMatriculaServer'
+    applicationName = 'portal-matricula-server'
+    outputDir = new File(project.buildDir, 'tmp/scripts/' + name)
+    classpath = startScripts.classpath
+}
+
+task PortalMatriculaClient(type: CreateStartScripts) {
+    mainClass = 'br.ufu.facom.gbc074.projeto.matricula.PortalMatriculaClient'
+    applicationName = 'portal-matricula-client'
+    outputDir = new File(project.buildDir, 'tmp/scripts/' + name)
+    classpath = startScripts.classpath
+}
 
 applicationDistribution.into('bin') {
     from(helloWorldServer)
     from(helloWorldClient)
+    from(PortalAdministrativoServer)
+    from(PortalAdministrativoClient)
+    from(PortalMatriculaServer)
+    from(PortalMatriculaClient)
     fileMode = 0755
 }

@@ -29,7 +29,7 @@ public class PortalMatriculaClient {
 
 	  public void addProfessor(String disciplinaID, String pessoaID) {
 		mutex = 1;
-	    logger.info("Adicionando professor "+ "<"+ pessoaID+"> a disciplina" + disciplinaID);
+	    logger.info("Adicionando professor "+ "<"+ pessoaID+"> a disciplina " + disciplinaID);
 	    DisciplinaPessoa request= DisciplinaPessoa.newBuilder().setDisciplina(disciplinaID).setIdPessoa(pessoaID).build();
 	    Status response;
 	    try {
@@ -44,7 +44,7 @@ public class PortalMatriculaClient {
 	  
 	  public void removeProfessor(String disciplinaID, String pessoaID) {
 		mutex = 1;
-	    logger.info("Removendo professor "+ "<"+ pessoaID+"> da disciplina" + disciplinaID);
+	    logger.info("Removendo professor "+ "<"+ pessoaID+"> da disciplina " + disciplinaID);
 	    DisciplinaPessoa request= DisciplinaPessoa.newBuilder().setDisciplina(disciplinaID).setIdPessoa(pessoaID).build();
 	    Status response;
 	    try {
@@ -59,7 +59,7 @@ public class PortalMatriculaClient {
 	  
 	  public void addAluno(String disciplinaID, String pessoaID) {
 		mutex = 1;
-	    logger.info("Adicionando aluno "+ "<"+ pessoaID+"> a disciplina" + disciplinaID);
+	    logger.info("Adicionando aluno "+ "<"+ pessoaID +"> a disciplina " + disciplinaID);
 	    DisciplinaPessoa request= DisciplinaPessoa.newBuilder().setDisciplina(disciplinaID).setIdPessoa(pessoaID).build();
 	    Status response;
 	    try {
@@ -74,7 +74,7 @@ public class PortalMatriculaClient {
 	  
 	  public void removeAluno(String disciplinaID, String pessoaID) {
 		mutex = 1;
-	    logger.info("Removendo aluno "+ "<"+ pessoaID+"> a disciplina" + disciplinaID);
+	    logger.info("Removendo aluno "+ "<"+ pessoaID+"> a disciplina " + disciplinaID);
 	    DisciplinaPessoa request= DisciplinaPessoa.newBuilder().setDisciplina(disciplinaID).setIdPessoa(pessoaID).build();
 	    Status response;
 	    try {
@@ -123,7 +123,7 @@ public class PortalMatriculaClient {
 	  
 	  public void obtemDisciplinasAluno(String id) {
 		  mutex = 1;
-		  logger.info("Obtendo disciplinas do aluno"+ "<"+ id+"> ");
+		  logger.info("Obtendo disciplinas do aluno "+ "<"+ id+"> ");
 		  Identificador request= Identificador.newBuilder().setId(id).build();
 		  Iterator<ResumoDisciplina> response;
 		  try {
@@ -192,7 +192,7 @@ public class PortalMatriculaClient {
 			String siape = scan.next();
 			System.out.println("Digite a sigla da disciplina:");
 			String sigla = scan.next();
-			this.addProfessor(siape, sigla);
+			this.addProfessor(sigla,siape);
 			while(mutex != 0) {}
 			break;
 		case 2:
@@ -200,7 +200,7 @@ public class PortalMatriculaClient {
 			siape = scan.next();
 			System.out.println("Digite a sigla da disciplina:");
 			sigla = scan.next();
-			this.removeProfessor(siape,sigla);
+			this.removeProfessor(sigla,siape);
 			while(mutex != 0) {}
 			break;
 		case 3:
@@ -208,7 +208,7 @@ public class PortalMatriculaClient {
 			String matricula = scan.next();
 			System.out.println("Digite a sigla da disciplina:");
 			sigla = scan.next();
-			this.addProfessor(matricula, sigla);
+			this.addAluno(sigla,matricula);
 			while(mutex != 0) {}
 			break;
 		case 4:
@@ -216,7 +216,7 @@ public class PortalMatriculaClient {
 			matricula = scan.next();
 			System.out.println("Digite a sigla da disciplina:");
 			sigla = scan.next();
-			this.removeProfessor(matricula,sigla);
+			this.removeAluno(sigla,matricula);
 			while(mutex != 0) {}
 			break;
 		case 5:
@@ -227,14 +227,14 @@ public class PortalMatriculaClient {
 			break;
 		case 6:
 			System.out.println("Digite o siape do professor:");
-			sigla = scan.next();
-			this.obtemDisciplinasProfessor(sigla);
+			siape = scan.next();
+			this.obtemDisciplinasProfessor(siape);
 			while(mutex != 0) {}
 			break;
 		case 7:
 			System.out.println("Digite a matricula do aluno:");
-			sigla = scan.next();
-			this.obtemDisciplinasAluno(sigla);
+			matricula = scan.next();
+			this.obtemDisciplinasAluno(matricula);
 			while(mutex != 0) {}
 			break;
 		default:
