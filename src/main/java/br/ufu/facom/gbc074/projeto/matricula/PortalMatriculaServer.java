@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
+
 import br.ufu.facom.gbc074.projeto.bd.Banco;
 import br.ufu.facom.gbc074.projeto.mqtt.MqttConfig;
 import io.grpc.Server;
@@ -63,13 +65,12 @@ public class PortalMatriculaServer {
 		int port = 50052;
 		try {
 			MqttConfig mqtt = new MqttConfig(String.valueOf(port));
-			mqtt.cliente.subscribe("aluno/create");
-			mqtt.cliente.subscribe("aluno/update");
-			mqtt.cliente.subscribe("aluno/delete");
+			mqtt.cliente.subscribe("aluno/#");
 			mqtt.cliente.subscribe("disciplina/#");
 			mqtt.cliente.subscribe("professor/#");
-		} catch (Exception e) {
-			// TODO: handle exception
+		} catch (MqttException e) {
+			System.err.println("Nao foi possivel conectar ao servidor MQTT");
+			System.exit(1);
 		}
 	    final PortalMatriculaServer server = new PortalMatriculaServer();
 	    server.start();
@@ -223,11 +224,11 @@ public class PortalMatriculaServer {
 	    public void obtemDisciplinasProfessor(Identificador req, StreamObserver<RelatorioDisciplina> responseObserver) {
 	    	String professorID = req.getId();
 	    	if(!Banco.professores.containsKey(professorID)) {//if professor naoo existe
-	    		responseObserver.onNext(RelatorioDisciplina.newBuilder().setDisciplina(Disciplina.newBuilder().setSigla(" ").setNome(" ").build())
+	    		responseObserver.onNext(RelatorioDisciplina.newBuilder().setDisciplina(Disciplina.newBuilder().setSigla(" ").setNome(" ").setVagas(0).build())
 	    		.addAlunos(Aluno.newBuilder().setMatricula(" ").setNome(" "))
 	    		.setProfessor(Professor.newBuilder().setSiape(" ").setNome(" ").build()).build());
 	    	}else if(Banco.professorDisciplinas.get(professorID).size() == 0) {//professor nao participa de alguma disciplina
-	    		responseObserver.onNext(RelatorioDisciplina.newBuilder().setDisciplina(Disciplina.newBuilder().setSigla(" ").setNome(" ").build())
+	    		responseObserver.onNext(RelatorioDisciplina.newBuilder().setDisciplina(Disciplina.newBuilder().setSigla(" ").setNome(" ").setVagas(0).build())
 	    		.addAlunos(Aluno.newBuilder().setMatricula(" ").setNome(" "))
 	    		.setProfessor(Professor.newBuilder().setSiape(professorID).setNome(Banco.professores.get(professorID)).build()).build());
 	    	}else {
@@ -240,7 +241,7 @@ public class PortalMatriculaServer {
 	    					alunos.add(Aluno.newBuilder().setMatricula(alunoID).setNome(Banco.alunos.get(alunoID)).build());
 	    				}
 	    			}
-	    			responseObserver.onNext(RelatorioDisciplina.newBuilder().setDisciplina(Disciplina.newBuilder().setSigla(disciplinaID).setNome(Banco.disciplinas.get(disciplinaID).getNome()).build())
+	    			responseObserver.onNext(RelatorioDisciplina.newBuilder().setDisciplina(Disciplina.newBuilder().setSigla(disciplinaID).setNome(Banco.disciplinas.get(disciplinaID).getNome()).setVagas(Banco.disciplinas.get(disciplinaID).getVagas()).build())
 	    															.addAllAlunos(alunos)
 	    															.setProfessor(Professor.newBuilder().setSiape(professorID).setNome(Banco.professores.get(professorID)).build()).build());
 	    		}
@@ -253,19 +254,19 @@ public class PortalMatriculaServer {
 	    	String alunoID = req.getId();
 	    	if(!Banco.alunos.containsKey(alunoID) || Banco.alunoDisciplinas.get(alunoID).size() == 0) {
 				responseObserver.onNext(ResumoDisciplina.newBuilder()
-				.setDisciplina(Disciplina.newBuilder().setSigla(" ").setNome(" ").build())
+				.setDisciplina(Disciplina.newBuilder().setSigla(" ").setNome(" ").setVagas(0).build())
 				.setProfessor(Professor.newBuilder().setSiape(" ").setNome(" ").build())
 				.setTotalAlunos(0).build());
 	    	}else {
 	    		for (String disciplinaID : Banco.alunoDisciplinas.get(alunoID)) {
 	    			if(!Banco.disciplinaProfessor.containsKey(disciplinaID)){//Disciplina nao tem professor
 	    				responseObserver.onNext(ResumoDisciplina.newBuilder()
-	    						.setDisciplina(Disciplina.newBuilder().setSigla(disciplinaID).setNome(Banco.disciplinas.get(disciplinaID).getNome()).build())
+	    						.setDisciplina(Disciplina.newBuilder().setSigla(disciplinaID).setNome(Banco.disciplinas.get(disciplinaID).getNome()).setVagas(Banco.disciplinas.get(disciplinaID).getVagas()).build())
 	    						.setProfessor(Professor.newBuilder().setSiape(" ").setNome(" ").build())
 	    						.setTotalAlunos(Banco.disciplinaAlunos.get(disciplinaID).size()).build());
 	    			}else {
 	    				responseObserver.onNext(ResumoDisciplina.newBuilder()
-	    						.setDisciplina(Disciplina.newBuilder().setSigla(disciplinaID).setNome(Banco.disciplinas.get(disciplinaID).getNome()).build())
+	    						.setDisciplina(Disciplina.newBuilder().setSigla(disciplinaID).setNome(Banco.disciplinas.get(disciplinaID).getNome()).setVagas(Banco.disciplinas.get(disciplinaID).getVagas()).build())
 	    						.setProfessor(Professor.newBuilder().setSiape(Banco.disciplinaProfessor.get(disciplinaID)).setNome(Banco.professores.get(Banco.disciplinaProfessor.get(disciplinaID))).build())
 	    						.setTotalAlunos(Banco.disciplinaAlunos.get(disciplinaID).size()).build());
 	    			}

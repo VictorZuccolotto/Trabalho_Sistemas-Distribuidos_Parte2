@@ -1,6 +1,7 @@
 package br.ufu.facom.gbc074.projeto.cadastro;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -27,10 +28,18 @@ public class PortalAdministrativoServer {
 	  public static MqttConfig mqtt;
 
 	  public static Gson gson = new Gson();
+	  
+	  private void isPortInUse(int port) throws Exception {
+		    try {
+		        (new ServerSocket(port)).close();
+		        return;
+		    } catch (IOException e) {
+		        throw new Exception();
+		    }
+	  }
 
-	  private void start() throws IOException {
+	  private void start(int port) throws IOException {
 	    /* The port on which the server should run */
-	    int port = 50051;
 	    server = ServerBuilder.forPort(port)
 	        .addService(new PortalAdministrativoImpl())
 	        .build()
@@ -72,14 +81,27 @@ public class PortalAdministrativoServer {
 	   * Main launches the server from the command line.
 	   */
 	  public static void main(String[] args) throws IOException, InterruptedException {
-		int port = 50051;
+		  int port =50051;
+		  if(args.length != 0 ) {
+			  System.out.println(args[0]);
+		}
+		
 	    final PortalAdministrativoServer server = new PortalAdministrativoServer();
 	    try {
-			server.mqtt = new MqttConfig(String.valueOf(port));
-		} catch (MqttException e) {
-			e.printStackTrace();
+			server.isPortInUse(port);
+		} catch (Exception e) {
+			System.exit(1);
 		}
-	    server.start();
+	    try {
+			mqtt = new MqttConfig(String.valueOf(port));
+			mqtt.cliente.subscribe("aluno/#");
+			mqtt.cliente.subscribe("disciplina/#");
+			mqtt.cliente.subscribe("professor/#");
+		} catch (MqttException e) {
+			System.err.println("Nao foi possivel conectar ao servidor MQTT");
+			System.exit(1);
+		}
+	    server.start(port);
 	    server.blockUntilShutdown();
 	  }
 

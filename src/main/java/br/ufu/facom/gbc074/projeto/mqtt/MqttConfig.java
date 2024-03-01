@@ -29,7 +29,7 @@ public class MqttConfig {
 		this.cliente.setCallback(new MqttCallback() {
             public void messageArrived(String topic, MqttMessage message) {
             	String payload = new String(message.getPayload());
-                System.out.println("Received message: " + payload);
+                System.out.println("Received message: " + payload + " From: " + message.getId());
                 switchTopicos(topic, message);
             }
 
