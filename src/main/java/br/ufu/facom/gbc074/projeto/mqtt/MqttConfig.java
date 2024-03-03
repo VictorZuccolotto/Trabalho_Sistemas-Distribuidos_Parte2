@@ -64,12 +64,13 @@ public class MqttConfig {
         	break;
         default:
             break;
-    }
+        }
 	}
 
 	private void handleAlunoPayload(String operacao,JsonObject payload) {
-		String matricula = payload.get("matricula").getAsString();
-		String nome = payload.get("nome").getAsString();
+	    String matricula = payload.has("matricula") ? payload.get("matricula").getAsString() : null;
+	    String nome = payload.has("nome") ? payload.get("nome").getAsString() : null;
+	    String sigla = payload.has("sigla") ? payload.get("sigla").getAsString() : null;
         switch(operacao) {
         case "create":
             Banco.alunos.put(matricula, nome);
@@ -85,16 +86,24 @@ public class MqttConfig {
 			Banco.alunoDisciplinas.remove(matricula);
 			Banco.alunos.remove(matricula);
         	break;
-        case "alunoDisciplinas":
+        case "add":
+        	System.out.println(Banco.disciplinaAlunos.get(sigla));
+    		Banco.disciplinaAlunos.get(sigla).add(matricula);
+    		Banco.alunoDisciplinas.get(matricula).add(sigla);
+        	break;
+        case "remove":
+    		Banco.disciplinaAlunos.get(sigla).remove(matricula);
+    		Banco.alunoDisciplinas.get(matricula).remove(sigla);
         	break;
         default:
     		System.out.println("Erro ao receber Mqtt");
             break;
-    }
+        }
 	}
         private void handleProfessorPayload(String operacao,JsonObject payload) {
-        	String siape = payload.get("siape").getAsString();
-        	String nome = payload.get("nome").getAsString();
+    		String siape= payload.has("siape") ? payload.get("siape").getAsString() : null;
+    		String nome  = payload.has("nome") ? payload.get("nome").getAsString() : null;
+    		String sigla = payload.has("sigla") ? payload.get("sigla").getAsString() : null;
         	switch(operacao) {
         	case "create":
         		Banco.professores.put(siape, nome);
@@ -110,8 +119,14 @@ public class MqttConfig {
 				Banco.alunoDisciplinas.remove(siape);
 				Banco.professores.remove(siape);
         		break;
-        	case "alunoDisciplinas":
-        		break;
+            case "add":
+				Banco.disciplinaProfessor.put(sigla,siape);
+				Banco.professorDisciplinas.get(siape).add(sigla);
+            	break;
+            case "remove":
+				Banco.disciplinaProfessor.remove(sigla);
+				Banco.professorDisciplinas.get(siape).remove(sigla);
+            	break;
         	default:
         		System.out.println("Erro ao receber Mqtt");
         		break;
@@ -119,16 +134,17 @@ public class MqttConfig {
 		
 	}
         private void handleDisciplinaPayload(String operacao,JsonObject payload) {
-        	String sigla = payload.get("sigla").getAsString();
-        	String nome = payload.get("nome").getAsString();
-        	int vagas = payload.get("vagas").getAsInt();
+    		String nome  = payload.has("nome") ? payload.get("nome").getAsString() : null;
+    		String sigla = payload.has("sigla") ? payload.get("sigla").getAsString() : null;
+        	int vagas = payload.has("vagas") ? payload.get("vagas").getAsInt() : null;
         	switch(operacao) {
         	case "create":
-			  Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
-			  Banco.disciplinaAlunos.put(sigla, new ArrayList<String>());
+        		Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
+        		Banco.disciplinaAlunos.put(sigla, new ArrayList<String>());
+        		System.out.println(Banco.disciplinaAlunos.get(sigla));
         		break;
         	case "update":
-			  Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
+        		Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
         		break;
         	case "delete":
 				for (String alunosID : Banco.disciplinaAlunos.get(sigla)) {
@@ -137,8 +153,6 @@ public class MqttConfig {
 				Banco.professorDisciplinas.get(Banco.disciplinaProfessor.get(sigla)).remove(sigla);
 				Banco.disciplinaProfessor.remove(sigla);
 				Banco.disciplinas.remove(sigla);
-        		break;
-        	case "alunoDisciplinas":
         		break;
         	default:
         		System.out.println("Erro ao receber Mqtt");

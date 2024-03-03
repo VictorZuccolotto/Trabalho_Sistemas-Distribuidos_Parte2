@@ -6,6 +6,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import br.ufu.facom.gbc074.projeto.bd.Banco;
 import br.ufu.facom.gbc074.projeto.mqtt.MqttConfig;
@@ -17,10 +22,13 @@ public class PortalMatriculaServer {
 	  private static final Logger logger = Logger.getLogger(PortalMatriculaServer.class.getName());
 
 	  private Server server;
+	  
+	  public static Gson gson = new Gson();
+	  
+	  public static MqttConfig mqtt;
 
-	  private void start() throws IOException {
+	  private void start(int port) throws IOException {
 	    /* The port on which the server should run */
-	    int port = 50052;
 	    server = ServerBuilder.forPort(port)
 	        .addService(new PortalMatriculaImpl())
 	        .build()
@@ -62,20 +70,24 @@ public class PortalMatriculaServer {
 	   * Main launches the server from the command line.
 	   */
 	  public static void main(String[] args) throws IOException, InterruptedException {
-		int port = 50052;
-		try {
-			MqttConfig mqtt = new MqttConfig(String.valueOf(port));
-			mqtt.cliente.subscribe("aluno/#");
-			mqtt.cliente.subscribe("disciplina/#");
-			mqtt.cliente.subscribe("professor/#");
-		} catch (MqttException e) {
+		  int port =50051;
+		  if(args.length != 0 ) {
+			  System.out.println(args[0]);
+			  port = Integer.parseInt(args[0]);
+		  }
+		  try {
+			PortalMatriculaServer.mqtt = new MqttConfig(String.valueOf(port));
+			PortalMatriculaServer.mqtt.cliente.subscribe("aluno/#");
+			PortalMatriculaServer.mqtt.cliente.subscribe("disciplina/#");
+			PortalMatriculaServer.mqtt.cliente.subscribe("professor/#");
+		  } catch (MqttException e) {
 			System.err.println("Nao foi possivel conectar ao servidor MQTT");
 			System.exit(1);
-		}
-	    final PortalMatriculaServer server = new PortalMatriculaServer();
-	    server.start();
-	    server.blockUntilShutdown();
-	  }
+		  }
+		  final PortalMatriculaServer server = new PortalMatriculaServer();
+		  server.start(port);
+		  server.blockUntilShutdown();
+    }
 
 	  static class PortalMatriculaImpl extends PortalMatriculaGrpc.PortalMatriculaImplBase {
 		  
@@ -99,6 +111,18 @@ public class PortalMatriculaServer {
 				code = 0;
 				Banco.disciplinaProfessor.put(disciplinaID,professorID);
 				Banco.professorDisciplinas.get(professorID).add(disciplinaID);
+				//Json
+				JsonObject jsonObject = new JsonObject();
+				jsonObject.addProperty("siape", professorID);
+				jsonObject.addProperty("sigla", disciplinaID);
+				//Mqtt
+				try {
+					PortalMatriculaServer.mqtt.cliente.publish("professor/add", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+				} catch (MqttPersistenceException e) {
+					e.printStackTrace();
+				} catch (MqttException e) {
+					e.printStackTrace();
+				}
 			}
 			Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 	      responseObserver.onNext(status);
@@ -128,6 +152,18 @@ public class PortalMatriculaServer {
 				code = 0;
 				Banco.disciplinaProfessor.remove(disciplinaID);
 				Banco.professorDisciplinas.get(professorID).remove(disciplinaID);
+				//Json
+				JsonObject jsonObject = new JsonObject();
+				jsonObject.addProperty("siape", professorID);
+				jsonObject.addProperty("sigla", disciplinaID);
+				//Mqtt
+				try {
+					PortalMatriculaServer.mqtt.cliente.publish("professor/remove", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+				} catch (MqttPersistenceException e) {
+					e.printStackTrace();
+				} catch (MqttException e) {
+					e.printStackTrace();
+				}
 			}
 			Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 	      responseObserver.onNext(status);
@@ -154,8 +190,21 @@ public class PortalMatriculaServer {
 	    		errorMsg = "Disciplina está com as vagas esgotadas";	    	
 	    	}else{
 	    		code = 0;
-	    		Banco.disciplinaAlunos.get(disciplinaID).add(alunoID);
-	    		Banco.alunoDisciplinas.get(alunoID).add(disciplinaID);
+//	    		Banco.disciplinaAlunos.get(disciplinaID).add(alunoID);
+//	    		Banco.alunoDisciplinas.get(alunoID).add(disciplinaID);
+				//Json
+				JsonObject jsonObject = new JsonObject();
+				jsonObject.addProperty("matricula", alunoID);
+				jsonObject.addProperty("sigla", disciplinaID);
+				System.out.println("Vapo" + disciplinaID);
+				//Mqtt
+				try {
+					PortalMatriculaServer.mqtt.cliente.publish("aluno/add", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+				} catch (MqttPersistenceException e) {
+					e.printStackTrace();
+				} catch (MqttException e) {
+					e.printStackTrace();
+				}
 	    	}
 	    	Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 	    	responseObserver.onNext(status);
@@ -182,6 +231,18 @@ public class PortalMatriculaServer {
 	    		code = 0;
 	    		Banco.disciplinaAlunos.get(disciplinaID).remove(alunoID);
 	    		Banco.alunoDisciplinas.get(alunoID).remove(disciplinaID);
+				//Json
+				JsonObject jsonObject = new JsonObject();
+				jsonObject.addProperty("matricula", alunoID);
+				jsonObject.addProperty("sigla", disciplinaID);
+				//Mqtt
+				try {
+					PortalMatriculaServer.mqtt.cliente.publish("aluno/remove", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+				} catch (MqttPersistenceException e) {
+					e.printStackTrace();
+				} catch (MqttException e) {
+					e.printStackTrace();
+				}
 	    	}
 	    	Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 	    	responseObserver.onNext(status);

@@ -84,6 +84,7 @@ public class PortalAdministrativoServer {
 		  int port =50051;
 		  if(args.length != 0 ) {
 			  System.out.println(args[0]);
+			  port = Integer.parseInt(args[0]);
 		}
 		
 	    final PortalAdministrativoServer server = new PortalAdministrativoServer();
@@ -302,7 +303,7 @@ public class PortalAdministrativoServer {
 						jsonObject.addProperty("nome", nome);
 						//Mqtt
 						try {
-							PortalAdministrativoServer.mqtt.cliente.publish("professor/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+							PortalAdministrativoServer.mqtt.cliente.publish("professor/update", new MqttMessage(gson.toJson(jsonObject).getBytes()));
 						} catch (MqttPersistenceException e) {
 							e.printStackTrace();
 						} catch (MqttException e) {
@@ -338,7 +339,7 @@ public class PortalAdministrativoServer {
 					  jsonObject.addProperty("siape", siape);
 					  //Mqtt
 					  try {
-						PortalAdministrativoServer.mqtt.cliente.publish("aluno/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+						PortalAdministrativoServer.mqtt.cliente.publish("professor/delete", new MqttMessage(gson.toJson(jsonObject).getBytes()));
 					  } catch (MqttPersistenceException e) {
 						e.printStackTrace();
 					  } catch (MqttException e) {
@@ -440,7 +441,7 @@ public class PortalAdministrativoServer {
 						jsonObject.addProperty("vagas", vagas);
 						//Mqtt
 						try {
-							PortalAdministrativoServer.mqtt.cliente.publish("disciplina/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+							PortalAdministrativoServer.mqtt.cliente.publish("disciplina/update", new MqttMessage(gson.toJson(jsonObject).getBytes()));
 						} catch (MqttPersistenceException e) {
 							e.printStackTrace();
 						} catch (MqttException e) {
@@ -478,7 +479,7 @@ public class PortalAdministrativoServer {
 					jsonObject.addProperty("sigla", sigla);
 					//Mqtt
 					try {
-						PortalAdministrativoServer.mqtt.cliente.publish("disciplina/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+						PortalAdministrativoServer.mqtt.cliente.publish("disciplina/delete", new MqttMessage(gson.toJson(jsonObject).getBytes()));
 					} catch (MqttPersistenceException e) {
 						e.printStackTrace();
 					} catch (MqttException e) {
