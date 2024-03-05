@@ -83,7 +83,6 @@ public class PortalAdministrativoServer {
 	  public static void main(String[] args) throws IOException, InterruptedException {
 		  int port =50051;
 		  if(args.length != 0 ) {
-			  System.out.println(args[0]);
 			  port = Integer.parseInt(args[0]);
 		}
 		
@@ -91,6 +90,7 @@ public class PortalAdministrativoServer {
 	    try {
 			server.isPortInUse(port);
 		} catch (Exception e) {
+			System.out.println("Esta porta já está em uso");
 			System.exit(1);
 		}
 	    try {
@@ -121,8 +121,8 @@ public class PortalAdministrativoServer {
 			 } else 
 			if(nome.length() > 4 && matricula.length() > 4){ //Caso contrario e tenha nome e matricula maior que 4
 				//Salvar no bd
-				Banco.alunos.put(matricula,nome);
-				Banco.alunoDisciplinas.put(matricula, new ArrayList<String>());
+//				Banco.alunos.put(matricula,nome);
+//				Banco.alunoDisciplinas.put(matricula, new ArrayList<String>());
 				code = 0;
 				//Json
 				JsonObject jsonObject = new JsonObject();
@@ -141,7 +141,6 @@ public class PortalAdministrativoServer {
 				errorMsg = "Nome ou matricula menor que 4";
 			}
 			Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
-//	      HelloReply reply = HelloReply.newBuilder().setMessage("Hello " + req.getName()).build();
 	      responseObserver.onNext(status);
 	      responseObserver.onCompleted();
 	    }
@@ -159,7 +158,7 @@ public class PortalAdministrativoServer {
 			 } else 
 			if(nome.length() > 4){ //Caso contrario e tenha nome e matricula maior que 4
 				//Salvar no bd
-				Banco.alunos.put(matricula,nome);
+//				Banco.alunos.put(matricula,nome);
 				code = 0;
 				//Json
 				JsonObject jsonObject = new JsonObject();
@@ -178,13 +177,13 @@ public class PortalAdministrativoServer {
 				errorMsg = "Nome menor que 4";
 			}
 			Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
-//	      HelloReply reply = HelloReply.newBuilder().setMessage("Hello " + req.getName()).build();
 	      responseObserver.onNext(status);
 	      responseObserver.onCompleted();
 	    }
 
 	    @Override
 	    public void removeAluno(Identificador req, StreamObserver<Status> responseObserver) {
+	    	System.out.println("vapinho?");
 			String matricula = req.getId();
 			int code;
 			String errorMsg = "";
@@ -193,11 +192,11 @@ public class PortalAdministrativoServer {
 			 	code = 1;
 			 	errorMsg = "Aluno não cadastrado";
 			}else{
-				for (String disciplinaID : Banco.alunoDisciplinas.get(matricula)) {
-					Banco.disciplinaAlunos.get(disciplinaID).remove(matricula);
-				}
-				Banco.alunoDisciplinas.remove(matricula);
-				Banco.alunos.remove(matricula);
+//				for (String disciplinaID : Banco.alunoDisciplinas.get(matricula)) {
+//					Banco.disciplinaAlunos.get(disciplinaID).remove(matricula);
+//				}
+//				Banco.alunoDisciplinas.remove(matricula);
+//				Banco.alunos.remove(matricula);
 				code = 0;
 				errorMsg = "";
 				//Json
@@ -205,7 +204,7 @@ public class PortalAdministrativoServer {
 				jsonObject.addProperty("matricula", matricula);
 				//Mqtt
 				try {
-					PortalAdministrativoServer.mqtt.cliente.publish("aluno/remove", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+					PortalAdministrativoServer.mqtt.cliente.publish("aluno/delete", new MqttMessage(gson.toJson(jsonObject).getBytes()));
 				} catch (MqttPersistenceException e) {
 					e.printStackTrace();
 				} catch (MqttException e) {
@@ -258,8 +257,8 @@ public class PortalAdministrativoServer {
 			  } else 
 				  if(nome.length() > 4 && siape.length() > 4){ //Caso contrario e tenha nome e siape maior que 4
 					  //Salvar no bd
-					  Banco.professores.put(siape,nome);
-					  Banco.professorDisciplinas.put(siape, new ArrayList<String>());
+//					  Banco.professores.put(siape,nome);
+//					  Banco.professorDisciplinas.put(siape, new ArrayList<String>());
 					  code = 0;
 					  //Json
 					  JsonObject jsonObject = new JsonObject();
@@ -295,7 +294,7 @@ public class PortalAdministrativoServer {
 			  } else 
 				  if(nome.length() > 4){ //Caso contrario e tenha nome e matricula maior que 4
 					  //Salvar no bd
-					  Banco.professores.put(siape,nome);
+//					  Banco.professores.put(siape,nome);
 					  code = 0;
 						//Json
 						JsonObject jsonObject = new JsonObject();
@@ -320,6 +319,7 @@ public class PortalAdministrativoServer {
 		  
 		  @Override
 		  public void removeProfessor(Identificador req, StreamObserver<Status> responseObserver) {
+			  System.out.println("vapinho?");
 			  String siape = req.getId();
 			  int code;
 			  String errorMsg = "";
@@ -328,11 +328,11 @@ public class PortalAdministrativoServer {
 				  code = 1;
 				  errorMsg = "Professor não cadastrado";
 			  }else{
-					for (String disciplinaID : Banco.professorDisciplinas.get(siape)) {
-						Banco.disciplinaProfessor.remove(disciplinaID);
-					}
-					Banco.alunoDisciplinas.remove(siape);
-					Banco.professores.remove(siape);
+//					for (String disciplinaID : Banco.professorDisciplinas.get(siape)) {
+//						Banco.disciplinaProfessor.remove(disciplinaID);
+//					}
+//					Banco.alunoDisciplinas.remove(siape);
+//					Banco.professores.remove(siape);
 					code = 0;
 					errorMsg = "";
 					  JsonObject jsonObject = new JsonObject();
@@ -393,8 +393,8 @@ public class PortalAdministrativoServer {
 			  } else 
 				  if(nome.length() > 4 && sigla.length() > 4){ //Caso contrario e tenha nome e sigla maior que 4
 					  //Salvar no bd
-					  Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
-					  Banco.disciplinaAlunos.put(sigla, new ArrayList<String>());
+//					  Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
+//					  Banco.disciplinaAlunos.put(sigla, new ArrayList<String>());
 					  code = 0;
 						//Json
 						JsonObject jsonObject = new JsonObject();
@@ -432,7 +432,7 @@ public class PortalAdministrativoServer {
 			  } else 
 				  if(nome.length() > 4){ //Caso contrario e tenha nome e matricula maior que 4
 					  //Salvar no bd
-					  Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
+//					  Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
 					  code = 0;
 						//Json
 						JsonObject jsonObject = new JsonObject();
@@ -466,12 +466,12 @@ public class PortalAdministrativoServer {
 				  code = 1;
 				  errorMsg = "Disciplina não cadastrado";
 			  }else{
-					for (String alunosID : Banco.disciplinaAlunos.get(sigla)) {
-						Banco.alunoDisciplinas.get(alunosID).remove(sigla);
-					}
-					Banco.professorDisciplinas.get(Banco.disciplinaProfessor.get(sigla)).remove(sigla);
-					Banco.disciplinaProfessor.remove(sigla);
-					Banco.disciplinas.remove(sigla);
+//					for (String alunosID : Banco.disciplinaAlunos.get(sigla)) {
+//						Banco.alunoDisciplinas.get(alunosID).remove(sigla);
+//					}
+//					Banco.professorDisciplinas.get(Banco.disciplinaProfessor.get(sigla)).remove(sigla);
+//					Banco.disciplinaProfessor.remove(sigla);
+//					Banco.disciplinas.remove(sigla);
 				  code = 0;
 				  errorMsg = "";
 					//Json

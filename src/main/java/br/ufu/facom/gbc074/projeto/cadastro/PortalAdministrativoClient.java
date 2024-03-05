@@ -1,9 +1,7 @@
 package br.ufu.facom.gbc074.projeto.cadastro;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,8 +17,6 @@ public class PortalAdministrativoClient {
 
 	  private final PortalAdministrativoGrpc.PortalAdministrativoBlockingStub blockingStub;
 	  
-	  private int mutex = 0;
-
 	  public PortalAdministrativoClient(Channel channel) {
 	    // Passing Channels to code makes code easier to test and makes it easier to
 	    // reuse Channels.
@@ -28,7 +24,6 @@ public class PortalAdministrativoClient {
 	  }
 
 	  public void createAluno(String nome, String matricula) {
-		mutex = 1;
 	    logger.info("Criando aluno "+ "<"+ matricula+"> " + nome);
 	    Aluno request= Aluno.newBuilder().setNome(nome).setMatricula(matricula).build();
 	    Status response;
@@ -39,11 +34,9 @@ public class PortalAdministrativoClient {
 	      return;
 	    }
 	    logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
-	    mutex = 0;
 	  }
 	  
 	  public void updateAluno(String nome, String matricula) {
-		  mutex = 1;
 	    logger.info("Editando aluno "+ "<"+ matricula+"> " + nome);
 	    Aluno request= Aluno.newBuilder().setNome(nome).setMatricula(matricula).build();
 	    Status response;
@@ -54,11 +47,9 @@ public class PortalAdministrativoClient {
 	      return;
 	    }
 	    logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
-	    mutex = 0;
 	  }
 	  
 	  public void deleteAluno(String id) {
-		  mutex = 1;
 		  logger.info("Deletando aluno "+ "<"+ id+"> ");
 		  Identificador request= Identificador.newBuilder().setId(id).build();
 		  Status response;
@@ -69,11 +60,9 @@ public class PortalAdministrativoClient {
 			  return;
 		  }
 		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
-		  mutex = 0;
 	  }
 	  
 	  public void readAluno(String id) {
-		  mutex = 1;
 		  logger.info("Obtendo aluno "+ "<"+ id+"> ");
 		  Identificador request= Identificador.newBuilder().setId(id).build();
 		  Aluno response;
@@ -85,11 +74,9 @@ public class PortalAdministrativoClient {
 		  }
 //		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
 		  System.out.println(response);
-		  mutex = 0;
 	  }
 	  
 	  public void readAllAlunos() {
-		  mutex = 1;
 		  logger.info("Obtendo alunos");
 		  Vazia request = Vazia.newBuilder().build();
 		  Iterator<Aluno> response;
@@ -103,11 +90,9 @@ public class PortalAdministrativoClient {
 			  return;
 		  }
 //		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
-		  mutex = 0;
 	  }
 
 	  public void createProfessor(String nome, String siape) {
-		  mutex = 1;
 		  logger.info("Criando professor "+ "<"+ siape+"> " + nome);
 		  Professor request= Professor.newBuilder().setNome(nome).setSiape(siape).build();
 		  Status response;
@@ -118,11 +103,9 @@ public class PortalAdministrativoClient {
 			  return;
 		  }
 		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
-		  mutex = 0;
 	  }
 	  
 	  public void updateProfessor(String nome, String siape) {
-		  mutex = 1;
 		  logger.info("Editando professor "+ "<"+ siape+"> " + nome);
 		  Professor request= Professor.newBuilder().setNome(nome).setSiape(siape).build();
 		  Status response;
@@ -133,11 +116,9 @@ public class PortalAdministrativoClient {
 			  return;
 		  }
 		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
-		  mutex = 0;
 	  }
 	  
 	  public void deleteProfessor(String id) {
-		  mutex = 1;
 		  logger.info("Deletando professor "+ "<"+ id+"> ");
 		  Identificador request= Identificador.newBuilder().setId(id).build();
 		  Status response;
@@ -148,11 +129,9 @@ public class PortalAdministrativoClient {
 			  return;
 		  }
 		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
-		  mutex = 0;
 	  }
 	  
 	  public void readProfessor(String id) {
-		  mutex = 1;
 		  logger.info("Obtendo professor "+ "<"+ id+"> ");
 		  Identificador request= Identificador.newBuilder().setId(id).build();
 		  Professor response;
@@ -163,11 +142,9 @@ public class PortalAdministrativoClient {
 			  return;
 		  }
 		  System.out.println(response);
-		  mutex = 0;
 	  }
 	  
 	  public void readAllProfessores() {
-		  mutex = 1;
 		  logger.info("Obtendo professores");
 		  Vazia request = Vazia.newBuilder().build();
 		  Iterator<Professor> response;
@@ -180,11 +157,9 @@ public class PortalAdministrativoClient {
 			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
 			  return;
 		  }
-		  mutex = 0;
 	  }
 	  
 	  public void createDisciplina(String nome, String sigla, int vagas) {
-		  mutex = 1;
 		  logger.info("Criando disciplina "+ "<"+ sigla+"> " + nome);
 		  Disciplina request= Disciplina.newBuilder().setNome(nome).setSigla(sigla).setVagas(vagas).build();
 		  Status response;
@@ -195,11 +170,9 @@ public class PortalAdministrativoClient {
 			  return;
 		  }
 		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
-		  mutex = 0;
 	  }
 	  
 	  public void updateDisciplina(String nome, String sigla, int vagas) {
-		  mutex = 1;
 		  logger.info("Editando disciplina "+ "<"+ sigla+"> " + nome);
 		  Disciplina request= Disciplina.newBuilder().setNome(nome).setSigla(sigla).setVagas(vagas).build();
 		  Status response;
@@ -210,11 +183,9 @@ public class PortalAdministrativoClient {
 			  return;
 		  }
 		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
-		  mutex = 0;
 	  }
 	  
 	  public void deleteDisciplina(String id) {
-		  mutex = 1;
 		  logger.info("Deletando disciplina "+ "<"+ id+"> ");
 		  Identificador request= Identificador.newBuilder().setId(id).build();
 		  Status response;
@@ -225,11 +196,9 @@ public class PortalAdministrativoClient {
 			  return;
 		  }
 		  logger.info("Status: " + "Code= "+ response.getStatus() + " Msg= "+ response.getMsg() );
-		  mutex = 0;
 	  }
 	  
 	  public void readDisciplina(String id) {
-		  mutex = 1;
 		  logger.info("Obtendo disciplina "+ "<"+ id+"> ");
 		  Identificador request= Identificador.newBuilder().setId(id).build();
 		  Disciplina response;
@@ -240,11 +209,9 @@ public class PortalAdministrativoClient {
 			  return;
 		  }
 		  System.out.println(response);
-		  mutex = 0;
 	  }
 	  
-	  public void readAllDisciplina() {
-		  mutex = 1;
+	  public void readAllDisciplinas() {
 		  logger.info("Obtendo disciplinas");
 		  Vazia request = Vazia.newBuilder().build();
 		  Iterator<Disciplina> response;
@@ -257,25 +224,76 @@ public class PortalAdministrativoClient {
 			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
 			  return;
 		  }
-		  mutex = 0;
 	  }
 	  
 
 	  public static void main(String[] args) throws Exception {
-	    String user = "Dedin";
-	    List<String> users = Arrays.asList("world", "sistemas", "distribuidos", "paulo");
-	    String target = "localhost:50051";
+	        if (args.length < 6 || args.length > 12) {
+	            System.out.println("Usage: --port <port> --base <base> --op <op> --key <key> --val <val1> [<val2>]");
+	            return;
+	        }
 
-	    if (args.length > 0) {
-	      if ("--help".equals(args[0])) {
-	        System.err.println("Usage: [name name name name]");
-	        System.err.println("");
-	        System.err.println("  name    The name(s) you wish to be greeted by. Defaults to " + user + " and " + users);
-	        System.exit(1);
-	      }
-	      user = args[0];
-	      users = Arrays.asList(args);
-	    }
+	        String port = null;
+	        String base = null;
+	        String op = null;
+	        String key = null;
+	        String val1 = null;
+	        String val2 = null;
+	        HashMap<String, String> options = new HashMap<String, String>();
+
+	        for (int i = 0; i < args.length; i += 2) {
+	            switch (args[i]) {
+	                case "--port":
+	                    port = args[i + 1];
+	                    break;
+	                case "--base":
+	                    base = args[i + 1];
+	                    break;
+	                case "--op":
+	                    op = args[i + 1];
+	                    break;
+	                case "--key":
+	                    key = args[i + 1];
+	                    break;
+	                case "--val":
+	                    val1 = args[i + 1];
+	                    if (i + 2 < args.length && !args[i + 2].startsWith("--")) {
+	                        val2 = args[i + 2];
+	                        i++; // skip the next argument
+	                    }
+	                    break;
+	                default:
+	                    System.out.println("Invalid argument: " + args[i]);
+	                    return;
+	            }
+	        }
+
+	        if (port == null || base == null || op == null) {
+	            System.out.println("Missing required argument.");
+	            return;
+	        }
+	        
+	        if(!op.equals("getall") && val1 == null && key == null) {
+	        	return;
+	        }
+	        
+	        options.put("base", base);
+	        options.put("op", op);
+	        options.put("key", key);
+	        options.put("val1", val1);
+	        if (val2 != null) {
+	        	options.put("val2", val2);
+	        }
+	        if(base == "disciplina" && (op == "create" || op == "update")) {
+	        	try {
+	        		Integer.parseInt(val2);
+	        	}catch (Exception e) {
+					System.out.println("Digite um valor inteiro para quantidade de vagas");
+				}
+
+	        }
+	        
+	    String target = "localhost:" + port;
 
 	    // Create a communication channel to the server, known as a Channel.
 	    // Channels are thread-safe and reusable.
@@ -286,152 +304,104 @@ public class PortalAdministrativoClient {
 	        // Channels are secure by default (via SSL/TLS). For the example we disable TLS
 	        // to avoid needing certificates.
 	        .usePlaintext().build();
-	    Scanner scan = new Scanner(System.in);
 	    try {
 	    	PortalAdministrativoClient client = new PortalAdministrativoClient(channel);
-	    	int opcao = 0;
-	    	do {
-	    		client.printpainelCliente();
-	    		opcao = scan.nextInt();
-	    		client.executaPortal(opcao,scan);
-	    	}while(opcao != 0);
-	      logger.info("Finalizando painel");
+    		client.executaPortal(options);
 	    } finally {
-	    	scan.close();
 	      channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
 	    }
 	  }
 	  
 	  
 	  
-	  public void executaPortal(int opcao,Scanner scan) {
+	  public void executaPortal(HashMap<String,String> options) {
+		  String opcao = options.get("op");
+		  String base = options.get("base");
+		  String key = options.get("key");
+		  String val = options.get("val1");
 		  switch (opcao) {
-		case 0:
-			break;
-		case 1:
-			System.out.println("Digite o nome do aluno:");
-			String nome = scan.next();
-			System.out.println("Digite a matricula do aluno:");
-			String matricula = scan.next();
-			this.createAluno(nome,matricula);
-			while(mutex != 0) {}
-			break;
-		case 2:
-			System.out.println("Digite o nome do aluno:");
-			nome = scan.next();
-			System.out.println("Digite a matricula do aluno:");
-			matricula = scan.next();
-			this.updateAluno(nome,matricula);
-			while(mutex != 0) {}
-			break;
-		case 3:
-			System.out.println("Digite a matricula do aluno:");
-			matricula = scan.next();
-			this.deleteAluno(matricula);
-			while(mutex != 0) {}
-			break;
-		case 4:
-			System.out.println("Digite a matricula do aluno:");
-			matricula = scan.next();
-			this.readAluno(matricula);
-			while(mutex != 0) {}
-			break;
-		case 5:
-			this.readAllAlunos();
-			while(mutex != 0) {}
-			break;
-		case 6:
-			System.out.println("Digite o nome do professor:");
-			nome = scan.next();
-			System.out.println("Digite o siape do professor:");
-			String siape = scan.next();
-			this.createProfessor(nome,siape);
-			while(mutex != 0) {}
-			break;
-		case 7:
-			System.out.println("Digite o nome do professor:");
-			nome = scan.next();
-			System.out.println("Digite o siape do professor:");
-			siape = scan.next();
-			this.updateProfessor(nome,siape);
-			while(mutex != 0) {}
-			break;
-		case 8:
-			System.out.println("Digite o siape do professor:");
-			siape = scan.next();
-			this.deleteProfessor(siape);
-			while(mutex != 0) {}
-			break;
-		case 9:
-			System.out.println("Digite o siape do professor:");
-			siape = scan.next();
-			this.readProfessor(siape);
-			while(mutex != 0) {}
-			break;
-		case 10:
-			this.readAllProfessores();
-			while(mutex != 0) {}
-			break;
-		case 11:
-			System.out.println("Digite o nome da disciplina:");
-			nome = scan.next();
-			System.out.println("Digite a sigla da disciplina:");
-			String sigla = scan.next();
-			System.out.println("Digite o limite de alunos da disciplina:");
-			int vagas = scan.nextInt();
-			this.createDisciplina(nome,sigla,vagas);
-			while(mutex != 0) {}
-			break;
-		case 12:
-			System.out.println("Digite o nome da disciplina:");
-			nome = scan.next();
-			System.out.println("Digite a sigla da disciplina:");
-			sigla = scan.next();
-			System.out.println("Digite o limite de alunos da disciplina:");
-			vagas = scan.nextInt();
-			this.updateDisciplina(nome,sigla,vagas);
-			while(mutex != 0) {}
-			break;
-		case 13:
-			System.out.println("Digite a sigla da disciplina:");
-			sigla = scan.next();
-			this.deleteDisciplina(sigla);
-			while(mutex != 0) {}
-			break;
-		case 14:
-			System.out.println("Digite a sigla da disciplina:");
-			sigla = scan.next();
-			this.readDisciplina(sigla);
-			while(mutex != 0) {}
-			break;
-		case 15:
-			this.readAllDisciplina();
-			while(mutex != 0) {}
-			break;
-		default:
-			System.out.println("Digite uma opção válida");
-			break;
-		}
+			case "create":
+				switch(base) {
+					case "aluno":
+						this.createAluno(val,key);
+						break;
+					case "professor":
+						this.createProfessor(val,key);
+						break;
+					case "disciplina":
+						Integer val2 = Integer.valueOf(options.get("val2"));
+						this.createDisciplina(val,key, val2);
+						break;
+					default:
+						break;
+					}
+					break;
+			case "update":
+				switch(base) {
+				case "aluno":
+					this.updateAluno(val,key);
+					break;
+				case "professor":
+					this.updateProfessor(val,key);
+					break;
+				case "disciplina":
+					Integer val2 = Integer.valueOf(options.get("val2"));
+					this.updateDisciplina(val,key, val2);
+					break;
+				default:
+					break;
+				}
+				break;
+			case "delete":
+				switch(base) {
+				case "aluno":
+					this.deleteAluno(key);
+					break;
+				case "professor":
+					this.deleteProfessor(key);
+					break;
+				case "disciplina":
+					this.deleteDisciplina(key);
+					break;
+				default:
+					break;
+				}
+				break;
+			case "get":
+				switch(base) {
+				case "aluno":
+					this.readAluno(key);
+					break;
+				case "professor":
+					this.readProfessor(key);
+					break;
+				case "disciplina":
+					this.readDisciplina(key);
+					break;
+				default:
+					break;
+				}
+				break;
+			case "getall":
+				switch(base) {
+				case "aluno":
+					this.readAllAlunos();
+					break;
+				case "professor":
+					this.readAllProfessores();
+					break;
+				case "disciplina":
+					this.readAllDisciplinas();
+					break;
+				default:
+					break;
+				}
+				break;
+			default:
+				System.out.println("Digite uma opção válida");
+				System.out.println("create  update  delete  get  getall");
+				break;
+			}
 	  }
 	  
-	  public void printpainelCliente() {
-		  System.out.println("==========Painel Cliente==========");
-		  System.out.println("[1]  Novo aluno");
-		  System.out.println("[2]  Editar aluno");
-		  System.out.println("[3]  Remover aluno");
-		  System.out.println("[4]  Obter aluno");
-		  System.out.println("[5]  Obter todos alunos");
-		  System.out.println("[6]  Novo professor");
-		  System.out.println("[7]  Editar professor");
-		  System.out.println("[8]  Remover professor");
-		  System.out.println("[9]  Obter professor");
-		  System.out.println("[10] Obter todos professores");
-		  System.out.println("[11] Nova disciplina");
-		  System.out.println("[12] Editar disciplina");
-		  System.out.println("[13] Remover disciplina");
-		  System.out.println("[14] Obter disciplina");
-		  System.out.println("[15] Obter todas disciplinas");
-		  System.out.println("[0]  Sair");
-		  System.out.println("================//================");
-	  }
 	}

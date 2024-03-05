@@ -1,6 +1,7 @@
  package br.ufu.facom.gbc074.projeto.matricula;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -26,6 +27,15 @@ public class PortalMatriculaServer {
 	  public static Gson gson = new Gson();
 	  
 	  public static MqttConfig mqtt;
+	  
+	  private void isPortInUse(int port) throws Exception {
+		    try {
+		        (new ServerSocket(port)).close();
+		        return;
+		    } catch (IOException e) {
+		        throw new Exception();
+		    }
+	  }
 
 	  private void start(int port) throws IOException {
 	    /* The port on which the server should run */
@@ -70,9 +80,8 @@ public class PortalMatriculaServer {
 	   * Main launches the server from the command line.
 	   */
 	  public static void main(String[] args) throws IOException, InterruptedException {
-		  int port =50051;
+		  int port =50052;
 		  if(args.length != 0 ) {
-			  System.out.println(args[0]);
 			  port = Integer.parseInt(args[0]);
 		  }
 		  try {
@@ -85,6 +94,12 @@ public class PortalMatriculaServer {
 			System.exit(1);
 		  }
 		  final PortalMatriculaServer server = new PortalMatriculaServer();
+		    try {
+				server.isPortInUse(port);
+			} catch (Exception e) {
+				System.out.println("Esta porta já está em uso");
+				System.exit(1);
+			}
 		  server.start(port);
 		  server.blockUntilShutdown();
     }
@@ -109,8 +124,8 @@ public class PortalMatriculaServer {
 				 errorMsg = "Disciplina já possui um professor associado";
 			}else{
 				code = 0;
-				Banco.disciplinaProfessor.put(disciplinaID,professorID);
-				Banco.professorDisciplinas.get(professorID).add(disciplinaID);
+//				Banco.disciplinaProfessor.put(disciplinaID,professorID);
+//				Banco.professorDisciplinas.get(professorID).add(disciplinaID);
 				//Json
 				JsonObject jsonObject = new JsonObject();
 				jsonObject.addProperty("siape", professorID);
@@ -150,8 +165,8 @@ public class PortalMatriculaServer {
 				 errorMsg = "Este professor não está associado a esta disciplina";
 			 }else{
 				code = 0;
-				Banco.disciplinaProfessor.remove(disciplinaID);
-				Banco.professorDisciplinas.get(professorID).remove(disciplinaID);
+//				Banco.disciplinaProfessor.remove(disciplinaID);
+//				Banco.professorDisciplinas.get(professorID).remove(disciplinaID);
 				//Json
 				JsonObject jsonObject = new JsonObject();
 				jsonObject.addProperty("siape", professorID);
@@ -196,7 +211,6 @@ public class PortalMatriculaServer {
 				JsonObject jsonObject = new JsonObject();
 				jsonObject.addProperty("matricula", alunoID);
 				jsonObject.addProperty("sigla", disciplinaID);
-				System.out.println("Vapo" + disciplinaID);
 				//Mqtt
 				try {
 					PortalMatriculaServer.mqtt.cliente.publish("aluno/add", new MqttMessage(gson.toJson(jsonObject).getBytes()));
@@ -229,8 +243,8 @@ public class PortalMatriculaServer {
 	    		errorMsg = "Aluno não matriculado na disciplina";
 	    	}else{
 	    		code = 0;
-	    		Banco.disciplinaAlunos.get(disciplinaID).remove(alunoID);
-	    		Banco.alunoDisciplinas.get(alunoID).remove(disciplinaID);
+//	    		Banco.disciplinaAlunos.get(disciplinaID).remove(alunoID);
+//	    		Banco.alunoDisciplinas.get(alunoID).remove(disciplinaID);
 				//Json
 				JsonObject jsonObject = new JsonObject();
 				jsonObject.addProperty("matricula", alunoID);

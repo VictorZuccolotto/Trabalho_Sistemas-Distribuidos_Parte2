@@ -29,7 +29,7 @@ public class MqttConfig {
 		this.cliente.setCallback(new MqttCallback() {
             public void messageArrived(String topic, MqttMessage message) {
             	String payload = new String(message.getPayload());
-                System.out.println("Received message: " + payload + " From: " + message.getId());
+                System.out.println("Received message: " + payload);
                 switchTopicos(topic, message);
             }
 
@@ -37,7 +37,8 @@ public class MqttConfig {
             }
 
             public void connectionLost(Throwable cause) {
-                cause.printStackTrace();
+                System.out.println("Conexao com MQTT perdida, finalizando servidor...");
+                System.exit(1);
             }
         });
         MqttConnectOptions connOpts = new MqttConnectOptions();
@@ -87,7 +88,6 @@ public class MqttConfig {
 			Banco.alunos.remove(matricula);
         	break;
         case "add":
-        	System.out.println(Banco.disciplinaAlunos.get(sigla));
     		Banco.disciplinaAlunos.get(sigla).add(matricula);
     		Banco.alunoDisciplinas.get(matricula).add(sigla);
         	break;
@@ -116,7 +116,7 @@ public class MqttConfig {
 				for (String disciplinaID : Banco.professorDisciplinas.get(siape)) {
 					Banco.disciplinaProfessor.remove(disciplinaID);
 				}
-				Banco.alunoDisciplinas.remove(siape);
+				Banco.professorDisciplinas.remove(siape);
 				Banco.professores.remove(siape);
         		break;
             case "add":
@@ -141,7 +141,6 @@ public class MqttConfig {
         	case "create":
         		Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
         		Banco.disciplinaAlunos.put(sigla, new ArrayList<String>());
-        		System.out.println(Banco.disciplinaAlunos.get(sigla));
         		break;
         	case "update":
         		Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));

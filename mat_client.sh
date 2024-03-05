@@ -1,0 +1,1 @@
+ bash build/install/TrabSd/bin/portal-matricula-client $@

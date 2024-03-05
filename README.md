@@ -1,8 +1,10 @@
 ## TODO
 
 - [x] - CRUD Sistema Administrativo e Matricula
-- [ ] - MQTT para comunicar com Sistema Matricula e vice versa
-- [ ] - MQTT para comunicar com mais de uma instancia de servidor
+- [x] - MQTT para comunicar com Sistema Matricula e vice versa
+- [x] - MQTT para comunicar com mais de uma instancia de servidor
+- [ ] - Resposta vazia ser [] ao inves de aluno ""
+- [ ] - Resposta stream ser [R1,R2,R3,...]
 
 
 gRPC Examples
