@@ -115,13 +115,13 @@ public class PortalMatriculaServer {
 			//Validacao
 			 if(!Banco.professores.containsKey(professorID)){ //Se professor nao existe
 			 	code = 1;
-			 	errorMsg = "Professor não cadastrado";
+			 	errorMsg = "Professor nao cadastrado";
 			 }else if(!Banco.disciplinas.containsKey(disciplinaID)){ //Se disciplina nao existe
 			 	code = 1;
-			 	errorMsg = "Disciplina não cadastrada";
+			 	errorMsg = "Disciplina nao cadastrada";
 			 }else if(Banco.disciplinaProfessor.containsKey(disciplinaID)){ //Caso disciplina já tenha um professor
 				 code = 1;
-				 errorMsg = "Disciplina já possui um professor associado";
+				 errorMsg = "Disciplina ja possui um professor associado";
 			}else{
 				code = 0;
 //				Banco.disciplinaProfessor.put(disciplinaID,professorID);
@@ -153,16 +153,16 @@ public class PortalMatriculaServer {
 			//Validacao
 			 if(!Banco.professores.containsKey(professorID)){ //Se professor nao existe
 			 	code = 1;
-			 	errorMsg = "Professor não cadastrado";
+			 	errorMsg = "Professor nao cadastrado";
 			 }else if(!Banco.disciplinas.containsKey(disciplinaID)){ //Se disciplina nao existe
 			 	code = 1;
-			 	errorMsg = "Disciplina não cadastrada";
+			 	errorMsg = "Disciplina nao cadastrada";
 			 }else if(!Banco.disciplinaProfessor.containsKey(disciplinaID)){ //Caso disciplina não tenha um professor
 				 code = 1;
-				 errorMsg = "Disciplina não possui um professor";
+				 errorMsg = "Disciplina nao possui um professor";
 			 }else if(!Banco.disciplinaProfessor.get(disciplinaID).equals(professorID)){
 				 code = 1;
-				 errorMsg = "Este professor não está associado a esta disciplina";
+				 errorMsg = "Este professor nao esta associado a esta disciplina";
 			 }else{
 				code = 0;
 //				Banco.disciplinaProfessor.remove(disciplinaID);
@@ -193,16 +193,16 @@ public class PortalMatriculaServer {
 	    	//Validacao
 	    	if(!Banco.alunos.containsKey(alunoID)){ //Se alunoo nao existe
 	    		code = 1;
-	    		errorMsg = "Aluno não cadastrado";
+	    		errorMsg = "Aluno nao cadastrado";
 	    	}else if(!Banco.disciplinas.containsKey(disciplinaID)){ //Se disciplina nao existe
 	    		code = 1;
-	    		errorMsg = "Disciplina não cadastrada";
+	    		errorMsg = "Disciplina nao cadastrada";
 	    	}else if(Banco.disciplinaAlunos.get(disciplinaID).contains(alunoID)){ //aluno ja faz parte da disciplina?
 	    		code = 1;
-	    		errorMsg = "Aluno já matriculado na disciplina";
+	    		errorMsg = "Aluno ja matriculado na disciplina";
 	    	}else if(!(Banco.disciplinaAlunos.get(disciplinaID).size() < Banco.disciplinas.get(disciplinaID).getVagas())) { // Se cabe mais aluno na disciplina
 	    		code = 1;
-	    		errorMsg = "Disciplina está com as vagas esgotadas";	    	
+	    		errorMsg = "Disciplina "+Banco.disciplinas.get(disciplinaID).getNome()+" ja atingiu a capacidade maxima de "+Banco.disciplinas.get(disciplinaID).getVagas();	    	
 	    	}else{
 	    		code = 0;
 //	    		Banco.disciplinaAlunos.get(disciplinaID).add(alunoID);
@@ -234,13 +234,13 @@ public class PortalMatriculaServer {
 	    	//Validacao
 	    	if(!Banco.alunos.containsKey(alunoID)){ //Se aluno nao existe
 	    		code = 1;
-	    		errorMsg = "Aluno não cadastrado";
+	    		errorMsg = "Aluno nao cadastrado";
 	    	}else if(!Banco.disciplinas.containsKey(disciplinaID)){ //Se disciplina nao existe
 	    		code = 1;
-	    		errorMsg = "Disciplina não cadastrada";
+	    		errorMsg = "Disciplina nao cadastrada";
 	    	}else if(!Banco.disciplinaAlunos.get(disciplinaID).contains(alunoID)){ //aluno nao faz parte da disciplina
 	    		code = 1;
-	    		errorMsg = "Aluno não matriculado na disciplina";
+	    		errorMsg = "Aluno nao matriculado na disciplina";
 	    	}else{
 	    		code = 0;
 //	    		Banco.disciplinaAlunos.get(disciplinaID).remove(alunoID);
@@ -298,10 +298,10 @@ public class PortalMatriculaServer {
 	    @Override
 	    public void obtemDisciplinasProfessor(Identificador req, StreamObserver<RelatorioDisciplina> responseObserver) {
 	    	String professorID = req.getId();
-	    	if(!Banco.professores.containsKey(professorID)) {//if professor naoo existe
-	    		responseObserver.onNext(RelatorioDisciplina.newBuilder().setDisciplina(Disciplina.newBuilder().setSigla(" ").setNome(" ").setVagas(0).build())
-	    		.addAlunos(Aluno.newBuilder().setMatricula(" ").setNome(" "))
-	    		.setProfessor(Professor.newBuilder().setSiape(" ").setNome(" ").build()).build());
+	    	if(!Banco.professores.containsKey(professorID)) {//if professor nao existe
+//	    		responseObserver.onNext(RelatorioDisciplina.newBuilder().setDisciplina(Disciplina.newBuilder().setSigla(" ").setNome(" ").setVagas(0).build())
+//	    		.addAlunos(Aluno.newBuilder().setMatricula(" ").setNome(" "))
+//	    		.setProfessor(Professor.newBuilder().setSiape(" ").setNome(" ").build()).build());
 	    	}else if(Banco.professorDisciplinas.get(professorID).size() == 0) {//professor nao participa de alguma disciplina
 	    		responseObserver.onNext(RelatorioDisciplina.newBuilder().setDisciplina(Disciplina.newBuilder().setSigla(" ").setNome(" ").setVagas(0).build())
 	    		.addAlunos(Aluno.newBuilder().setMatricula(" ").setNome(" "))
@@ -309,7 +309,7 @@ public class PortalMatriculaServer {
 	    	}else {
 	    		for (String disciplinaID : Banco.professorDisciplinas.get(professorID)) {
 	    			ArrayList<Aluno> alunos = new ArrayList<Aluno>();
-	    			if(Banco.disciplinaAlunos.get(disciplinaID).size() == 0) {
+	    			if(Banco.disciplinaAlunos.get(disciplinaID).size() == 0) { //disciplina nao tem alunos
 	    				alunos.add(Aluno.newBuilder().setMatricula(" ").setNome(" ").build());
 	    			}else {
 	    				for (String alunoID : Banco.disciplinaAlunos.get(disciplinaID)) {
@@ -327,11 +327,11 @@ public class PortalMatriculaServer {
 	    @Override
 	    public void obtemDisciplinasAluno(Identificador req, StreamObserver<ResumoDisciplina> responseObserver) {
 	    	String alunoID = req.getId();
-	    	if(!Banco.alunos.containsKey(alunoID) || Banco.alunoDisciplinas.get(alunoID).size() == 0) {
-				responseObserver.onNext(ResumoDisciplina.newBuilder()
-				.setDisciplina(Disciplina.newBuilder().setSigla(" ").setNome(" ").setVagas(0).build())
-				.setProfessor(Professor.newBuilder().setSiape(" ").setNome(" ").build())
-				.setTotalAlunos(0).build());
+	    	if(!Banco.alunos.containsKey(alunoID) || Banco.alunoDisciplinas.get(alunoID).size() == 0) { //se aluno nao existe ou numero de disciplinas do aluno é 0
+//				responseObserver.onNext(ResumoDisciplina.newBuilder()
+//				.setDisciplina(Disciplina.newBuilder().setSigla(" ").setNome(" ").setVagas(0).build())
+//				.setProfessor(Professor.newBuilder().setSiape(" ").setNome(" ").build())
+//				.setTotalAlunos(0).build());
 	    	}else {
 	    		for (String disciplinaID : Banco.alunoDisciplinas.get(alunoID)) {
 	    			if(!Banco.disciplinaProfessor.containsKey(disciplinaID)){//Disciplina nao tem professor

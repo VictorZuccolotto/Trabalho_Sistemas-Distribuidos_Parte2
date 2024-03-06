@@ -82,9 +82,15 @@ public class PortalAdministrativoClient {
 		  Iterator<Aluno> response;
 		  try {
 			  response = blockingStub.obtemTodosAlunos(request);
+			  System.out.print("[");
 			  while(response.hasNext()) {
-				  System.out.println(response.next());
+				  System.out.print(response.next());
+				  if(response.hasNext()) {
+					  System.out.print(", ");
+				  }
+					  
 			  }
+			  System.out.println("]");
 		  } catch (StatusRuntimeException e) {
 			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
 			  return;
@@ -150,9 +156,14 @@ public class PortalAdministrativoClient {
 		  Iterator<Professor> response;
 		  try {
 			  response = blockingStub.obtemTodosProfessores(request);
+			  System.out.print("[");
 			  while(response.hasNext()) {
-				  System.out.println(response.next());
+				  System.out.print(response.next());
+				  if(response.hasNext()) {
+					  System.out.print(", ");
+				  }
 			  }
+			  System.out.println("]");
 		  } catch (StatusRuntimeException e) {
 			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
 			  return;
@@ -217,9 +228,14 @@ public class PortalAdministrativoClient {
 		  Iterator<Disciplina> response;
 		  try {
 			  response = blockingStub.obtemTodasDisciplinas(request);
+			  System.out.print("[");
 			  while(response.hasNext()) {
-				  System.out.println(response.next());
+				  System.out.print(response.next());
+				  if(response.hasNext()) {
+					  System.out.print(", ");
+				  }
 			  }
+			  System.out.println("]");
 		  } catch (StatusRuntimeException e) {
 			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
 			  return;

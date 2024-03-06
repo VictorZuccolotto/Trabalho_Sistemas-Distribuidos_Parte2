@@ -117,9 +117,9 @@ public class PortalAdministrativoServer {
 			//Validacao
 			 if(Banco.alunos.containsKey(matricula)){ //Se aluno existe
 			 	code = 1;
-			 	errorMsg = "Aluno já cadastrado";
+			 	errorMsg = "Aluno ja cadastrado";
 			 } else 
-			if(nome.length() > 4 && matricula.length() > 4){ //Caso contrario e tenha nome e matricula maior que 4
+			if(nome.length() >= 4 && matricula.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4
 				//Salvar no bd
 //				Banco.alunos.put(matricula,nome);
 //				Banco.alunoDisciplinas.put(matricula, new ArrayList<String>());
@@ -154,9 +154,9 @@ public class PortalAdministrativoServer {
 			//Validacao
 			 if(!Banco.alunos.containsKey(matricula)){ //Se aluno não existe
 			 	code = 1;
-			 	errorMsg = "Aluno não cadastrado";
+			 	errorMsg = "Aluno nao cadastrado";
 			 } else 
-			if(nome.length() > 4){ //Caso contrario e tenha nome e matricula maior que 4
+			if(nome.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4
 				//Salvar no bd
 //				Banco.alunos.put(matricula,nome);
 				code = 0;
@@ -183,14 +183,13 @@ public class PortalAdministrativoServer {
 
 	    @Override
 	    public void removeAluno(Identificador req, StreamObserver<Status> responseObserver) {
-	    	System.out.println("vapinho?");
 			String matricula = req.getId();
 			int code;
 			String errorMsg = "";
 			//Validacao
 			 if(!Banco.alunos.containsKey(matricula)){ //Se aluno não existe
 			 	code = 1;
-			 	errorMsg = "Aluno não cadastrado";
+			 	errorMsg = "Aluno nao cadastrado";
 			}else{
 //				for (String disciplinaID : Banco.alunoDisciplinas.get(matricula)) {
 //					Banco.disciplinaAlunos.get(disciplinaID).remove(matricula);
@@ -233,8 +232,8 @@ public class PortalAdministrativoServer {
 	    @Override
 	    public void obtemTodosAlunos(Vazia req, StreamObserver<Aluno> responseObserver) {
 	    	if(Banco.alunos.size() == 0) {
-	    		Aluno alunoResponse = Aluno.newBuilder().setMatricula(" ").setNome(" ").build();
-	    		responseObserver.onNext(alunoResponse);
+//	    		Aluno alunoResponse = Aluno.newBuilder().setMatricula(" ").setNome(" ").build();
+//	    		responseObserver.onNext(alunoResponse);
 	    	}else {
 		        for (String matricula : Banco.alunos.keySet()) {
 		            Aluno alunoResponse = Aluno.newBuilder().setMatricula(matricula).setNome(Banco.alunos.get(matricula)).build();
@@ -253,9 +252,9 @@ public class PortalAdministrativoServer {
 			  //Validacao
 			  if(Banco.professores.containsKey(siape)){ //Se professor existe
 				  code = 1;
-				  errorMsg = "Professor já cadastrado";
+				  errorMsg = "Professor ja cadastrado";
 			  } else 
-				  if(nome.length() > 4 && siape.length() > 4){ //Caso contrario e tenha nome e siape maior que 4
+				  if(nome.length() >= 4 && siape.length() >= 4){ //Caso contrario e tenha nome e siape maior que 4
 					  //Salvar no bd
 //					  Banco.professores.put(siape,nome);
 //					  Banco.professorDisciplinas.put(siape, new ArrayList<String>());
@@ -290,9 +289,9 @@ public class PortalAdministrativoServer {
 			  //Validacao
 			  if(!Banco.professores.containsKey(siape)){ //Se professor não existe
 				  code = 1;
-				  errorMsg = "Aluno não cadastrado";
+				  errorMsg = "Professor nao cadastrado";
 			  } else 
-				  if(nome.length() > 4){ //Caso contrario e tenha nome e matricula maior que 4
+				  if(nome.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4
 					  //Salvar no bd
 //					  Banco.professores.put(siape,nome);
 					  code = 0;
@@ -319,14 +318,13 @@ public class PortalAdministrativoServer {
 		  
 		  @Override
 		  public void removeProfessor(Identificador req, StreamObserver<Status> responseObserver) {
-			  System.out.println("vapinho?");
 			  String siape = req.getId();
 			  int code;
 			  String errorMsg = "";
 			  //Validacao
 			  if(!Banco.professores.containsKey(siape)){ //Se professor não existe
 				  code = 1;
-				  errorMsg = "Professor não cadastrado";
+				  errorMsg = "Professor nao cadastrado";
 			  }else{
 //					for (String disciplinaID : Banco.professorDisciplinas.get(siape)) {
 //						Banco.disciplinaProfessor.remove(disciplinaID);
@@ -368,8 +366,8 @@ public class PortalAdministrativoServer {
 		  @Override
 		  public void obtemTodosProfessores(Vazia req, StreamObserver<Professor> responseObserver) {
 			  if(Banco.professores.size() == 0) {
-				  Professor professorResponse = Professor.newBuilder().setSiape(" ").setNome(" ").build();
-				  responseObserver.onNext(professorResponse);
+//				  Professor professorResponse = Professor.newBuilder().setSiape(" ").setNome(" ").build();
+//				  responseObserver.onNext(professorResponse);
 			  }else {
 				  for (String siape : Banco.professores.keySet()) {
 					  Professor professorResponse = Professor.newBuilder().setSiape(siape).setNome(Banco.professores.get(siape)).build();
@@ -389,7 +387,7 @@ public class PortalAdministrativoServer {
 			  //Validacao
 			  if(Banco.disciplinas.containsKey(sigla)){ //Se disciplina existe
 				  code = 1;
-				  errorMsg = "Disciplina já cadastrado";
+				  errorMsg = "Disciplina ja cadastrado";
 			  } else 
 				  if(nome.length() > 4 && sigla.length() > 4){ //Caso contrario e tenha nome e sigla maior que 4
 					  //Salvar no bd
@@ -428,7 +426,7 @@ public class PortalAdministrativoServer {
 			  //Validacao
 			  if(!Banco.disciplinas.containsKey(sigla)){ //Se disciplina não existe
 				  code = 1;
-				  errorMsg = "Disciplina não cadastrado";
+				  errorMsg = "Disciplina nao cadastrado";
 			  } else 
 				  if(nome.length() > 4){ //Caso contrario e tenha nome e matricula maior que 4
 					  //Salvar no bd
@@ -464,7 +462,7 @@ public class PortalAdministrativoServer {
 			  //Validacao
 			  if(!Banco.disciplinas.containsKey(sigla)){ //Se disciplina não existe
 				  code = 1;
-				  errorMsg = "Disciplina não cadastrado";
+				  errorMsg = "Disciplina nao cadastrado";
 			  }else{
 //					for (String alunosID : Banco.disciplinaAlunos.get(sigla)) {
 //						Banco.alunoDisciplinas.get(alunosID).remove(sigla);
@@ -509,8 +507,8 @@ public class PortalAdministrativoServer {
 		  @Override
 		  public void obtemTodasDisciplinas(Vazia req, StreamObserver<Disciplina> responseObserver) {
 			  if(Banco.disciplinas.size() == 0) {
-				  Disciplina disciplinaResponse = Disciplina.newBuilder().setSigla(" ").setNome(" ").build();
-				  responseObserver.onNext(disciplinaResponse);
+//				  Disciplina disciplinaResponse = Disciplina.newBuilder().setSigla(" ").setNome(" ").build();
+//				  responseObserver.onNext(disciplinaResponse);
 			  }else {
 				  for (String sigla : Banco.disciplinas.keySet()) {
 					  DisciplinaModel disciplina = Banco.disciplinas.get(sigla);

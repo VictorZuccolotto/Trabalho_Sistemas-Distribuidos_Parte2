@@ -96,9 +96,15 @@ public class PortalMatriculaClient {
 		  Iterator<RelatorioDisciplina> response;
 		  try {
 			  response = blockingStub.obtemDisciplinasProfessor(request);
+			  System.out.print("[");
 			  while(response.hasNext()) {
-				  System.out.println(response.next());
+				  System.out.print(response.next());
+				  if(response.hasNext()) {
+					  System.out.print(", ");
+				  }
+					  
 			  }
+			  System.out.println("]");
 		  } catch (StatusRuntimeException e) {
 			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
 			  return;
@@ -112,9 +118,15 @@ public class PortalMatriculaClient {
 		  Iterator<ResumoDisciplina> response;
 		  try {
 			  response = blockingStub.obtemDisciplinasAluno(request);
+			  System.out.print("[");
 			  while(response.hasNext()) {
-				  System.out.println(response.next());
+				  System.out.print(response.next());
+				  if(response.hasNext()) {
+					  System.out.print(", ");
+				  }
+					  
 			  }
+			  System.out.println("]");
 		  } catch (StatusRuntimeException e) {
 			  logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
 			  return;
