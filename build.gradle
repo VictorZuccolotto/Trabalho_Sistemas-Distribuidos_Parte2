@@ -27,6 +27,17 @@ def protobufVersion = '3.19.2'
 def protocVersion = protobufVersion
 
 dependencies {
+	implementation 'org.apache.ratis:ratis-server:2.2.0'
+    implementation 'org.apache.ratis:ratis-netty:2.2.0'
+    implementation 'org.apache.ratis:ratis-grpc:2.2.0'
+    implementation 'com.beust:jcommander:1.82'
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.1'
+    implementation 'org.apache.logging.log4j:log4j-api:2.17.1'
+	// https://mvnrepository.com/artifact/org.iq80.leveldb/leveldb
+	implementation group: 'org.iq80.leveldb', name: 'leveldb', version: '0.12'
+
+    
     implementation "io.grpc:grpc-protobuf:${grpcVersion}"
     implementation "io.grpc:grpc-stub:${grpcVersion}"
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
@@ -93,10 +104,27 @@ task PortalMatriculaClient(type: CreateStartScripts) {
     classpath = startScripts.classpath
 }
 
+task ServidorRatis(type: CreateStartScripts) {
+    mainClass = 'br.ufu.facom.gbc074.projeto.ratis.Servidor'
+    applicationName = 'ratis-server'
+    outputDir = new File(project.buildDir, 'tmp/scripts/' + name)
+    classpath = startScripts.classpath
+}
+
+task Teste(type: CreateStartScripts) {
+    mainClass = 'br.ufu.facom.gbc074.projeto.teste.GsonTeste'
+    applicationName = 'teste'
+    outputDir = new File(project.buildDir, 'tmp/scripts/' + name)
+    classpath = startScripts.classpath
+}
+
+
 applicationDistribution.into('bin') {
     from(PortalAdministrativoServer)
     from(PortalAdministrativoClient)
     from(PortalMatriculaServer)
     from(PortalMatriculaClient)
+    from(ServidorRatis)
+    from(Teste)
     fileMode = 0755
 }

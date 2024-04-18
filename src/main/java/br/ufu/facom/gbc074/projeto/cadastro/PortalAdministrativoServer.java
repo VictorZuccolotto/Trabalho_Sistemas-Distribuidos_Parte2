@@ -2,10 +2,13 @@ package br.ufu.facom.gbc074.projeto.cadastro;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import org.apache.ratis.protocol.Message;
+import org.apache.ratis.protocol.RaftClientReply;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
@@ -16,6 +19,7 @@ import com.google.gson.JsonObject;
 import br.ufu.facom.gbc074.projeto.bd.Banco;
 import br.ufu.facom.gbc074.projeto.bd.model.DisciplinaModel;
 import br.ufu.facom.gbc074.projeto.mqtt.MqttConfig;
+import br.ufu.facom.gbc074.projeto.ratis.RatisClient;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -26,6 +30,8 @@ public class PortalAdministrativoServer {
 	  private Server server;
 	  
 	  public static MqttConfig mqtt;
+	  
+	  public static RatisClient ratisClient = new RatisClient();
 
 	  public static Gson gson = new Gson();
 	  
@@ -128,6 +134,16 @@ public class PortalAdministrativoServer {
 				JsonObject jsonObject = new JsonObject();
 				jsonObject.addProperty("matricula", matricula);
 				jsonObject.addProperty("nome", nome);
+				//Teste Ratis
+				try {
+					RaftClientReply getValue;
+					getValue = ratisClient.clusters.get(matricula.hashCode()%2).io().sendReadOnly(Message.valueOf("aluno:create:" + matricula +":"+ nome));
+					String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+					System.out.println("Resposta:" + response);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				//Fim Teste
 				//Mqtt
 				try {
 					PortalAdministrativoServer.mqtt.cliente.publish("aluno/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
