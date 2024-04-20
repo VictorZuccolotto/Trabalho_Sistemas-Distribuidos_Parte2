@@ -30,7 +30,6 @@ import com.google.gson.reflect.TypeToken;
 
 
 public class MaquinaDeEstados extends BaseStateMachine {
-  private final Map<String, String> key2values = new ConcurrentHashMap<>();
   private DB db;
 
   public MaquinaDeEstados(String bd) {
@@ -82,27 +81,6 @@ public class MaquinaDeEstados extends BaseStateMachine {
   
     final String op = opKeyValue;
     String result = op + ":";
-//
-//    String key = opKeyValue.length < 2 ? "" : opKeyValue[1];
-//    String value = opKeyValue.length < 3 ? "" : opKeyValue[2];
-//    switch (op) {
-//      case "add":
-////    	  System.out.println("Esta passando pelo add");
-////    	this.db.put("testeChave".getBytes(), "testeValorVapovapo".getBytes());
-////    	String[] payload = {"bcc01", "Dedin"};
-////    	handleAlunoPayload("create",payload);
-//        result += key2values.put(key, value);
-//        break;
-//      case "del":
-//        result += key2values.remove(key);
-//        break;
-//      case "clear":
-//        key2values.clear();
-//        result += ":ok";
-//        break;
-//      default:
-//        result += "invalid-op";
-//    }
     final CompletableFuture<Message> f = CompletableFuture.completedFuture(Message.valueOf(result));
 
 //    final RaftProtos.RaftPeerRole role = trx.getServerRole();
@@ -118,7 +96,6 @@ public class MaquinaDeEstados extends BaseStateMachine {
   		String response = "";
   		switch(operacao) {
         case "get":
-        	System.out.println(operacao+":"+id);
         	byte[] b = this.db.get((base+":"+id).getBytes());
         	if (b != null){
         		String str = new String(b);
@@ -127,7 +104,6 @@ public class MaquinaDeEstados extends BaseStateMachine {
         	}
         	return "";	
         case "getsize":
-        	System.out.println("chega aqui? "+base);
             String prefixo = base+":";
             int tamanhoSubbanco = 0;
             try (DBIterator iterator = db.iterator()) {
@@ -171,13 +147,13 @@ public class MaquinaDeEstados extends BaseStateMachine {
 		JsonObject payload = JsonParser.parseString(message[2]).getAsJsonObject();
         switch(base) {
         case "aluno":
-        	System.out.println(operacao+":"+message[2]);
             handleAlunoPayload(operacao,payload);
             break;
         case "professor":
         	handleProfessorPayload(operacao, payload);
         	break;
         case "disciplina":
+        	System.out.println(operacao+":"+message[2]);
         	handleDisciplinaPayload(operacao, payload);
         	break;
         default:

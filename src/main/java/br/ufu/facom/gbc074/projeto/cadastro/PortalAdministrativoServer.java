@@ -126,7 +126,6 @@ public class PortalAdministrativoServer {
 			 	errorMsg = "Aluno ja cadastrado";
 			 } else 
 			if(nome.length() >= 4 && matricula.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4 matricula.hashCode()%2
-				System.out.println("Recebido aluno valido");
 				try {
 					String responseGet = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset());
 					if(responseGet.isEmpty()) {
@@ -310,7 +309,7 @@ public class PortalAdministrativoServer {
 		  public void novoProfessor(Professor req, StreamObserver<Status> responseObserver) {
 			  String nome = req.getNome();
 			  String siape = req.getSiape();
-			  int code;
+			  int code = 1;
 			  String errorMsg = "";
 			  //Validacao
 			  if(Banco.professores.containsKey(siape)){ //Se professor existe
@@ -318,22 +317,34 @@ public class PortalAdministrativoServer {
 				  errorMsg = "Professor ja cadastrado";
 			  } else 
 				  if(nome.length() >= 4 && siape.length() >= 4){ //Caso contrario e tenha nome e siape maior que 4
-					  //Salvar no bd
-//					  Banco.professores.put(siape,nome);
-//					  Banco.professorDisciplinas.put(siape, new ArrayList<String>());
-					  code = 0;
-					  //Json
-					  JsonObject jsonObject = new JsonObject();
-					  jsonObject.addProperty("siape", siape);
-					  jsonObject.addProperty("nome", nome);
-					  //Mqtt
 					  try {
-						PortalAdministrativoServer.mqtt.cliente.publish("professor/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-					  } catch (MqttPersistenceException e) {
+						String responseGet = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset());
+						if(responseGet.isEmpty()) {
+						  code = 0;
+						  //Json
+						  JsonObject jsonObject = new JsonObject();
+						  jsonObject.addProperty("siape", siape);
+						  jsonObject.addProperty("nome", nome);
+						//Ratis
+						RaftClientReply getValue;
+						getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("professor:create:"+jsonObject.toString()));
+						String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+						System.out.println("Resposta:" + response);
+						  //Mqtt
+						  try {
+							PortalAdministrativoServer.mqtt.cliente.publish("professor/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+						  } catch (MqttPersistenceException e) {
+							e.printStackTrace();
+						  } catch (MqttException e) {
+							e.printStackTrace();
+						  }
+						}else{
+							code = 1;
+							errorMsg = "Professor ja cadastrado";
+						}
+					} catch (IOException e) {
 						e.printStackTrace();
-					  } catch (MqttException e) {
-						e.printStackTrace();
-					  }
+					}
 				  }else{
 					  code = 1;
 					  errorMsg = "Nome ou siape menor que 4";
@@ -347,33 +358,41 @@ public class PortalAdministrativoServer {
 		  public void editaProfessor(Professor req, StreamObserver<Status> responseObserver) {
 			  String nome = req.getNome();
 			  String siape = req.getSiape();
-			  int code;
+			  int code = 1;
 			  String errorMsg = "";
 			  //Validacao
-			  if(!Banco.professores.containsKey(siape)){ //Se professor não existe
-				  code = 1;
-				  errorMsg = "Professor nao cadastrado";
-			  } else 
-				  if(nome.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4
-					  //Salvar no bd
-//					  Banco.professores.put(siape,nome);
-					  code = 0;
-						//Json
-						JsonObject jsonObject = new JsonObject();
-						jsonObject.addProperty("siape", siape);
-						jsonObject.addProperty("nome", nome);
-						//Mqtt
-						try {
-							PortalAdministrativoServer.mqtt.cliente.publish("professor/update", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-						} catch (MqttPersistenceException e) {
-							e.printStackTrace();
-						} catch (MqttException e) {
-							e.printStackTrace();
-						}
-				  }else{
-					  code = 1;
-					  errorMsg = "Nome menor que 4";
+			  try {
+				if(Banco.professores.containsKey(siape) || !ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se professor existe
+					  if(nome.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4
+						  code = 0;
+						  //Json
+						  JsonObject jsonObject = new JsonObject();
+						  jsonObject.addProperty("siape", siape);
+						  jsonObject.addProperty("nome", nome);
+							//Ratis
+							RaftClientReply getValue;
+							getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("professor:update:"+jsonObject.toString()));
+							String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+							System.out.println("Resposta:" + response);
+						  //Mqtt
+						  try {
+							  PortalAdministrativoServer.mqtt.cliente.publish("professor/update", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+						  } catch (MqttPersistenceException e) {
+							  e.printStackTrace();
+						  } catch (MqttException e) {
+							  e.printStackTrace();
+						  }
+					  }else{
+						  code = 1;
+						  errorMsg = "Nome menor que 4";
+					  }
+				  } else {
+					code = 1;
+				  	errorMsg = "Professor nao cadastrado";
 				  }
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			  Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 			  responseObserver.onNext(status);
 			  responseObserver.onCompleted();
@@ -382,31 +401,36 @@ public class PortalAdministrativoServer {
 		  @Override
 		  public void removeProfessor(Identificador req, StreamObserver<Status> responseObserver) {
 			  String siape = req.getId();
-			  int code;
+			  int code = 1;
 			  String errorMsg = "";
 			  //Validacao
-			  if(!Banco.professores.containsKey(siape)){ //Se professor não existe
-				  code = 1;
-				  errorMsg = "Professor nao cadastrado";
-			  }else{
-//					for (String disciplinaID : Banco.professorDisciplinas.get(siape)) {
-//						Banco.disciplinaProfessor.remove(disciplinaID);
-//					}
-//					Banco.alunoDisciplinas.remove(siape);
-//					Banco.professores.remove(siape);
+			  try {
+				if(Banco.professores.containsKey(siape) || !ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se professor não existe
 					code = 0;
 					errorMsg = "";
-					  JsonObject jsonObject = new JsonObject();
-					  jsonObject.addProperty("siape", siape);
-					  //Mqtt
-					  try {
+					//Json
+					JsonObject jsonObject = new JsonObject();
+					jsonObject.addProperty("siape", siape);
+					//Ratis
+					RaftClientReply getValue;
+					getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("professor:delete:"+jsonObject.toString()));
+					String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+					System.out.println("Resposta:" + response);
+					//Mqtt
+					try {
 						PortalAdministrativoServer.mqtt.cliente.publish("professor/delete", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-					  } catch (MqttPersistenceException e) {
+					} catch (MqttPersistenceException e) {
 						e.printStackTrace();
-					  } catch (MqttException e) {
+					} catch (MqttException e) {
 						e.printStackTrace();
-					  }
-			  }
+					}
+				  }else{
+					  code = 1;
+					  errorMsg = "Professor nao cadastrado";
+				  }
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			  Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 			  responseObserver.onNext(status);
 			  responseObserver.onCompleted();
@@ -415,27 +439,53 @@ public class PortalAdministrativoServer {
 		  @Override
 		  public void obtemProfessor(Identificador req, StreamObserver<Professor> responseObserver) {
 			  String siape = req.getId();
-			  Professor professorResponse;
+			  Professor professorResponse = null;
 			  //Validacao
-			  if(!Banco.professores.containsKey(siape)){ //Se aluno não existe
-				  professorResponse = Professor.newBuilder().setSiape(" ").setNome(" ").build();
-			  }else{
+			  if(Banco.professores.containsKey(siape)){ //Se professor existe
 				  professorResponse = Professor.newBuilder().setSiape(siape).setNome(Banco.professores.get(siape)).build();
-			  }
+			  }else{
+				  try {
+						String nome = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset()); 
+						if (!nome.isEmpty()){ //Se professor existe) { //LevelDB
+							professorResponse = Professor.newBuilder().setSiape(siape).setNome(nome).build();
+						}else {
+							professorResponse = Professor.newBuilder().setSiape(" ").setNome(" ").build();
+						}
+				  } catch (IOException e) {
+					  e.printStackTrace();
+				  }
+						}
 			  responseObserver.onNext(professorResponse);
 			  responseObserver.onCompleted();
 		  }
 		  
 		  @Override
 		  public void obtemTodosProfessores(Vazia req, StreamObserver<Professor> responseObserver) {
-			  if(Banco.professores.size() == 0) {
-//				  Professor professorResponse = Professor.newBuilder().setSiape(" ").setNome(" ").build();
-//				  responseObserver.onNext(professorResponse);
-			  }else {
+			  try {
+				if(Banco.professores.size() != 0 &&
+						(Integer.valueOf(ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("professores:getsize:")).getMessage().getContent().toString(Charset.defaultCharset()))
+								+Integer.valueOf(ratisClient.clusters.get(1).io().sendReadOnly(Message.valueOf("professores:getsize:")).getMessage().getContent().toString(Charset.defaultCharset()))
+								== Banco.professores.size()) ) {
 				  for (String siape : Banco.professores.keySet()) {
 					  Professor professorResponse = Professor.newBuilder().setSiape(siape).setNome(Banco.professores.get(siape)).build();
 					  responseObserver.onNext(professorResponse);
 				  }
+				}else {
+					String responseC0 =ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("professores:getall:")).getMessage().getContent().toString(Charset.defaultCharset());
+					String responseC1 =ratisClient.clusters.get(1).io().sendReadOnly(Message.valueOf("professores:getall:")).getMessage().getContent().toString(Charset.defaultCharset());
+					String[] professores = (responseC0+","+responseC1).split(",");
+					for (String professor : professores) {
+						String[] prof = professor.split("=");
+						String nome = prof[1];
+						String siape = prof[0].split(":")[1];
+						Professor professorResponse = Professor.newBuilder().setSiape(siape).setNome(nome).build();
+						responseObserver.onNext(professorResponse);	
+					}
+				}
+			  } catch (NumberFormatException e) {
+				e.printStackTrace();
+			  } catch (IOException e) {
+				e.printStackTrace();
 			  }
 			  responseObserver.onCompleted();
 		  }
