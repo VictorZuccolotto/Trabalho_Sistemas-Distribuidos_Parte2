@@ -2,11 +2,10 @@
 
 - [x] Implementar servidores Ratis
 - [x] bash bd.sh
-- [] bash bd.sh receber 0,1,2 como parametros e nao 1,2,3
+- [ ] bash bd.sh receber 0,1,2 como parametros e nao 1,2,3
 - [x] Fazer inserções e consultas para aluno
 - [x] Fazer inserções e consultas para professor
 - [x] Fazer inserções e consultas para disciplina
-- [x] Mudar banco de dados para de acordo
 - [ ] Portal Matricula inserções e consultas
 
 Faltou apenas o fazer o portal matricula se comunicar com os clusters nas consultas de relatorio (tempo)
