@@ -81,11 +81,15 @@ public class MqttConfig {
         	Banco.alunos.put(matricula, nome);
         	break;
         case "delete":
-			for (String disciplinaID : Banco.alunoDisciplinas.get(matricula)) {
-				Banco.disciplinaAlunos.get(disciplinaID).remove(matricula);
+        	try {
+				for (String disciplinaID : Banco.alunoDisciplinas.get(matricula)) {
+					Banco.disciplinaAlunos.get(disciplinaID).remove(matricula);
+				}
+				Banco.alunoDisciplinas.remove(matricula);
+				Banco.alunos.remove(matricula);
+        	}catch (Exception e) {
+        		System.err.println("Não existe aqui");
 			}
-			Banco.alunoDisciplinas.remove(matricula);
-			Banco.alunos.remove(matricula);
         	break;
         case "add":
     		Banco.disciplinaAlunos.get(sigla).add(matricula);

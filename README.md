@@ -4,10 +4,12 @@
 - [] verificar conexao com servidores ratis
 - [x] bash bd.sh
 - [] bash bd.sh receber 0,1,2 como parametros e nao 1,2,3
-- [] Fazer inserções e consultas
-- [] Mudar banco de dados para de acordo
+- [x] Fazer inserções e consultas para aluno
+- [] Fazer inserções e consultas para professor
+- [] Fazer inserções e consultas para disciplina
+- [x] Mudar banco de dados para de acordo
 
-
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE)
 Trabalho Sistemas distribuidos
 ==============================================
 O intuito do trabalho é a criação de dois servidores, um matricula e um administrativo.

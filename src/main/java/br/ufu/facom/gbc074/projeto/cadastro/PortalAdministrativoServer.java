@@ -118,38 +118,44 @@ public class PortalAdministrativoServer {
 	    public void novoAluno(Aluno req, StreamObserver<Status> responseObserver) {
 			String nome = req.getNome();
 			String matricula = req.getMatricula();
-			int code;
+			int code = 1;
 			String errorMsg = "";
 			//Validacao
 			 if(Banco.alunos.containsKey(matricula)){ //Se aluno existe
 			 	code = 1;
 			 	errorMsg = "Aluno ja cadastrado";
 			 } else 
-			if(nome.length() >= 4 && matricula.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4
-				//Salvar no bd
-//				Banco.alunos.put(matricula,nome);
-//				Banco.alunoDisciplinas.put(matricula, new ArrayList<String>());
-				code = 0;
-				//Json
-				JsonObject jsonObject = new JsonObject();
-				jsonObject.addProperty("matricula", matricula);
-				jsonObject.addProperty("nome", nome);
-				//Teste Ratis
+			if(nome.length() >= 4 && matricula.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4 matricula.hashCode()%2
+				System.out.println("Recebido aluno valido");
 				try {
-					RaftClientReply getValue;
-					getValue = ratisClient.clusters.get(matricula.hashCode()%2).io().sendReadOnly(Message.valueOf("aluno:create:" + matricula +":"+ nome));
-					String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
-					System.out.println("Resposta:" + response);
+					String responseGet = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset());
+					if(responseGet.isEmpty()) {
+						System.out.println("Nao existe no cluster, tentando inserir");
+//				if(nao existe no leveldb) else errorMsg = "Aluno ja cadastrado"; e colocar no cache
+						code = 0;
+						//Json
+						JsonObject jsonObject = new JsonObject();
+						jsonObject.addProperty("matricula", matricula);
+						jsonObject.addProperty("nome", nome);
+						//Ratis
+							RaftClientReply getValue;
+							getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("aluno:create:"+jsonObject.toString()));
+							String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+							System.out.println("Resposta:" + response);
+						//Mqtt
+						try {
+							PortalAdministrativoServer.mqtt.cliente.publish("aluno/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+						} catch (MqttPersistenceException e) {
+							e.printStackTrace();
+						} catch (MqttException e) {
+							e.printStackTrace();
+						}	
+					}else {
+					 	code = 1;
+					 	errorMsg = "Aluno ja cadastrado";
+//					 	colocar no cache
+					}
 				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				//Fim Teste
-				//Mqtt
-				try {
-					PortalAdministrativoServer.mqtt.cliente.publish("aluno/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-				} catch (MqttPersistenceException e) {
-					e.printStackTrace();
-				} catch (MqttException e) {
 					e.printStackTrace();
 				}
 			}else{
@@ -165,67 +171,80 @@ public class PortalAdministrativoServer {
 	    public void editaAluno(Aluno req, StreamObserver<Status> responseObserver) {
 			String nome = req.getNome();
 			String matricula = req.getMatricula();
-			int code;
+			int code = 1;
 			String errorMsg = "";
 			//Validacao
-			 if(!Banco.alunos.containsKey(matricula)){ //Se aluno não existe
-			 	code = 1;
-			 	errorMsg = "Aluno nao cadastrado";
-			 } else 
-			if(nome.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4
-				//Salvar no bd
-//				Banco.alunos.put(matricula,nome);
-				code = 0;
-				//Json
-				JsonObject jsonObject = new JsonObject();
-				jsonObject.addProperty("matricula", matricula);
-				jsonObject.addProperty("nome", nome);
-				//Mqtt
-				try {
-					PortalAdministrativoServer.mqtt.cliente.publish("aluno/update", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-				} catch (MqttPersistenceException e) {
-					e.printStackTrace();
-				} catch (MqttException e) {
-					e.printStackTrace();
-				}
-			}else{
-				code = 1;
-				errorMsg = "Nome menor que 4";
+			 try {
+				if(Banco.alunos.containsKey(matricula) || !ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //inLevelDB
+					 if(nome.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4
+						code = 0;
+						//Json
+						JsonObject jsonObject = new JsonObject();
+						jsonObject.addProperty("matricula", matricula);
+						jsonObject.addProperty("nome", nome);
+						//Ratis
+						RaftClientReply getValue;
+						getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("aluno:update:"+jsonObject.toString()));
+						String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+						System.out.println("Resposta:" + response);
+						//Mqtt
+						try {
+							PortalAdministrativoServer.mqtt.cliente.publish("aluno/update", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+						} catch (MqttPersistenceException e) {
+							e.printStackTrace();
+						} catch (MqttException e) {
+							e.printStackTrace();
+						}
+					}else{
+						code = 1;
+						errorMsg = "Nome menor que 4";
+					}
+				 }else {
+					 code = 1;
+					 errorMsg = "Aluno nao cadastrado";				 					 
+				 }
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
-	      responseObserver.onNext(status);
-	      responseObserver.onCompleted();
+			 Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
+			 responseObserver.onNext(status);
+			 responseObserver.onCompleted();
+			 
 	    }
 
 	    @Override
 	    public void removeAluno(Identificador req, StreamObserver<Status> responseObserver) {
 			String matricula = req.getId();
-			int code;
+			int code = 1;
 			String errorMsg = "";
 			//Validacao
-			 if(!Banco.alunos.containsKey(matricula)){ //Se aluno não existe
-			 	code = 1;
-			 	errorMsg = "Aluno nao cadastrado";
-			}else{
-//				for (String disciplinaID : Banco.alunoDisciplinas.get(matricula)) {
-//					Banco.disciplinaAlunos.get(disciplinaID).remove(matricula);
-//				}
-//				Banco.alunoDisciplinas.remove(matricula);
-//				Banco.alunos.remove(matricula);
-				code = 0;
-				errorMsg = "";
-				//Json
-				JsonObject jsonObject = new JsonObject();
-				jsonObject.addProperty("matricula", matricula);
-				//Mqtt
 				try {
-					PortalAdministrativoServer.mqtt.cliente.publish("aluno/delete", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-				} catch (MqttPersistenceException e) {
-					e.printStackTrace();
-				} catch (MqttException e) {
-					e.printStackTrace();
-				}
-			}
+					if(Banco.alunos.containsKey(matricula) || !ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()) {
+						code = 0;
+						errorMsg = "";
+						//Json
+						JsonObject jsonObject = new JsonObject();
+						jsonObject.addProperty("matricula", matricula);
+						//Ratis
+						RaftClientReply getValue;
+						getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("aluno:delete:"+jsonObject.toString()));
+						String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+						System.out.println("Resposta:" + response);
+						//Mqtt
+							try {
+								PortalAdministrativoServer.mqtt.cliente.publish("aluno/delete", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+							} catch (MqttPersistenceException e) {
+								e.printStackTrace();
+							} catch (MqttException e) {
+								e.printStackTrace();
+							}
+					 }else{
+						code = 1;
+						errorMsg = "Aluno nao cadastrado";
+							 }
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 			Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 			responseObserver.onNext(status);
 			responseObserver.onCompleted();
@@ -234,28 +253,56 @@ public class PortalAdministrativoServer {
 	    @Override
 	    public void obtemAluno(Identificador req, StreamObserver<Aluno> responseObserver) {
 			String matricula = req.getId();
-			Aluno alunoResponse;
+			Aluno alunoResponse = null;
 			//Validacao
-			 if(!Banco.alunos.containsKey(matricula)){ //Se aluno não existe
-				 alunoResponse = Aluno.newBuilder().setMatricula(" ").setNome(" ").build();
-			}else{
-				alunoResponse = Aluno.newBuilder().setMatricula(matricula).setNome(Banco.alunos.get(matricula)).build();
-			}
+			 if(Banco.alunos.containsKey(matricula)){ //Se aluno existe
+				 alunoResponse = Aluno.newBuilder().setMatricula(matricula).setNome(Banco.alunos.get(matricula)).build();
+			 } else
+				try {
+					String nome = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset()); 
+					if (!nome.isEmpty()){ //Se aluno não existe) { //LevelDB
+						alunoResponse = Aluno.newBuilder().setMatricula(matricula).setNome(nome).build();
+					}else{
+						alunoResponse = Aluno.newBuilder().setMatricula(" ").setNome(" ").build();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			responseObserver.onNext(alunoResponse);
 	    	responseObserver.onCompleted();
 	    }
 	    
 	    @Override
 	    public void obtemTodosAlunos(Vazia req, StreamObserver<Aluno> responseObserver) {
-	    	if(Banco.alunos.size() == 0) {
-//	    		Aluno alunoResponse = Aluno.newBuilder().setMatricula(" ").setNome(" ").build();
-//	    		responseObserver.onNext(alunoResponse);
-	    	}else {
-		        for (String matricula : Banco.alunos.keySet()) {
-		            Aluno alunoResponse = Aluno.newBuilder().setMatricula(matricula).setNome(Banco.alunos.get(matricula)).build();
-		            responseObserver.onNext(alunoResponse);
-		          }
-	    	}
+//	    	String sizeC0 = "0";
+//	    	String sizeC1 = "0";
+	    	try {
+				if(Banco.alunos.size() != 0 &&
+						(Integer.valueOf(ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("alunos:getsize:")).getMessage().getContent().toString(Charset.defaultCharset()))
+								+Integer.valueOf(ratisClient.clusters.get(1).io().sendReadOnly(Message.valueOf("alunos:getsize:")).getMessage().getContent().toString(Charset.defaultCharset()))
+								== Banco.alunos.size()) ) {
+//					System.out.println((Integer.valueOf(sizeC0) + Integer.valueOf(sizeC1)));
+					for (String matricula : Banco.alunos.keySet()) {
+						Aluno alunoResponse = Aluno.newBuilder().setMatricula(matricula).setNome(Banco.alunos.get(matricula)).build();
+						responseObserver.onNext(alunoResponse);
+					}
+				}else {
+						String responseC0 =ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("alunos:getall:")).getMessage().getContent().toString(Charset.defaultCharset());
+						String responseC1 =ratisClient.clusters.get(1).io().sendReadOnly(Message.valueOf("alunos:getall:")).getMessage().getContent().toString(Charset.defaultCharset());
+						String[] alunos = (responseC0+","+responseC1).split(",");
+						for (String aluno : alunos) {// alunos:bcc01=brito
+							String[] al = aluno.split("=");
+							String nome = al[1];
+							String matricula = al[0].split(":")[1];
+							Aluno alunoResponse = Aluno.newBuilder().setMatricula(matricula).setNome(nome).build();
+							responseObserver.onNext(alunoResponse);
+						}
+				}
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		      responseObserver.onCompleted();
 	    }
 	    

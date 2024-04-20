@@ -112,7 +112,7 @@ task ServidorRatis(type: CreateStartScripts) {
 }
 
 task Teste(type: CreateStartScripts) {
-    mainClass = 'br.ufu.facom.gbc074.projeto.teste.GsonTeste'
+    mainClass = 'br.ufu.facom.gbc074.projeto.teste.LevelDBTeste'
     applicationName = 'teste'
     outputDir = new File(project.buildDir, 'tmp/scripts/' + name)
     classpath = startScripts.classpath

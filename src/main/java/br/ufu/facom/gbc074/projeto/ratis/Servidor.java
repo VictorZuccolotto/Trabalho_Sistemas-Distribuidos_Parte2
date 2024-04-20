@@ -66,7 +66,7 @@ public class Servidor {
     properties.setInt(GrpcConfigKeys.OutputStream.RETRY_TIMES_KEY, Integer.MAX_VALUE);
     GrpcConfigKeys.Server.setPort(properties, port);
     RaftServerConfigKeys.setStorageDir(
-        properties, Collections.singletonList(new File("src\\main\\resources\\cluster"+args[1]+"\\" + myId)));
+        properties, Collections.singletonList(new File("src\\main\\resources\\clusters\\cluster"+args[1]+"\\" + myId)));
 
     // Join the group of processes.
     final RaftGroup raftGroup =
