@@ -495,35 +495,46 @@ public class PortalAdministrativoServer {
 			  String nome = req.getNome();
 			  int vagas = req.getVagas();
 			  String sigla = req.getSigla();
-			  int code;
+			  int code = 1;
 			  String errorMsg = "";
 			  //Validacao
-			  if(Banco.disciplinas.containsKey(sigla)){ //Se disciplina existe
-				  code = 1;
-				  errorMsg = "Disciplina ja cadastrado";
-			  } else 
-				  if(nome.length() > 4 && sigla.length() > 4){ //Caso contrario e tenha nome e sigla maior que 4
-					  //Salvar no bd
-//					  Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
-//					  Banco.disciplinaAlunos.put(sigla, new ArrayList<String>());
-					  code = 0;
-						//Json
-						JsonObject jsonObject = new JsonObject();
-						jsonObject.addProperty("sigla", sigla);
-						jsonObject.addProperty("nome", nome);
-						jsonObject.addProperty("vagas", vagas);
-						//Mqtt
-						try {
-							PortalAdministrativoServer.mqtt.cliente.publish("disciplina/create", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-						} catch (MqttPersistenceException e) {
-							e.printStackTrace();
-						} catch (MqttException e) {
-							e.printStackTrace();
+				if (Banco.disciplinas.containsKey(sigla)) { // Se disciplina existe
+					code = 1;
+					errorMsg = "Disciplina ja cadastrado";
+				} else if (nome.length() > 4 && sigla.length() > 4) { // Caso contrario e tenha nome e sigla maior que 4
+					try {
+						String responseGet = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("disciplinas:get:" + sigla)).getMessage().getContent().toString(Charset.defaultCharset());
+						if (responseGet.isEmpty()) {
+							code = 0;
+							// Json
+							JsonObject jsonObject = new JsonObject();
+							jsonObject.addProperty("sigla", sigla);
+							jsonObject.addProperty("nome", nome);
+							jsonObject.addProperty("vagas", vagas);
+							//Ratis
+							RaftClientReply getValue;
+							getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("disciplina:create:"+jsonObject.toString()));
+							String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+							System.out.println("Resposta:" + response);
+							// Mqtt
+							try {
+								PortalAdministrativoServer.mqtt.cliente.publish("disciplina/create",new MqttMessage(gson.toJson(jsonObject).getBytes()));
+							} catch (MqttPersistenceException e) {
+								e.printStackTrace();
+							} catch (MqttException e) {
+								e.printStackTrace();
+							}
+						} else {
+							code = 1;
+							errorMsg = "Disciplina ja cadastrado";
 						}
-				  }else{
-					  code = 1;
-					  errorMsg = "Nome ou sigla menor que 4";
-				  }
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				} else {
+					code = 1;
+					errorMsg = "Nome ou sigla menor que 4";
+				}
 			  Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 			  responseObserver.onNext(status);
 			  responseObserver.onCompleted();
@@ -534,34 +545,42 @@ public class PortalAdministrativoServer {
 			  String nome = req.getNome();
 			  int vagas = req.getVagas();
 			  String sigla = req.getSigla();
-			  int code;
+			  int code = 1;
 			  String errorMsg = "";
 			  //Validacao
-			  if(!Banco.disciplinas.containsKey(sigla)){ //Se disciplina não existe
-				  code = 1;
-				  errorMsg = "Disciplina nao cadastrado";
-			  } else 
-				  if(nome.length() > 4){ //Caso contrario e tenha nome e matricula maior que 4
-					  //Salvar no bd
-//					  Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
-					  code = 0;
-						//Json
-						JsonObject jsonObject = new JsonObject();
-						jsonObject.addProperty("sigla", sigla);
-						jsonObject.addProperty("nome", nome);
-						jsonObject.addProperty("vagas", vagas);
-						//Mqtt
-						try {
-							PortalAdministrativoServer.mqtt.cliente.publish("disciplina/update", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-						} catch (MqttPersistenceException e) {
-							e.printStackTrace();
-						} catch (MqttException e) {
-							e.printStackTrace();
-						}
-				  }else{
+			  try {
+				if(Banco.disciplinas.containsKey(sigla) || !ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("disciplinas:get:" + sigla)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){//Se disciplina existe
+					  if(nome.length() > 4){ //Caso contrario e tenha nome e matricula maior que 4
+						  code = 0;
+						  //Json
+						  JsonObject jsonObject = new JsonObject();
+						  jsonObject.addProperty("sigla", sigla);
+						  jsonObject.addProperty("nome", nome);
+						  jsonObject.addProperty("vagas", vagas);
+							//Ratis
+							RaftClientReply getValue;
+							getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("disciplina:update:"+jsonObject.toString()));
+							String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+							System.out.println("Resposta:" + response);
+						  //Mqtt
+						  try {
+							  PortalAdministrativoServer.mqtt.cliente.publish("disciplina/update", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+						  } catch (MqttPersistenceException e) {
+							  e.printStackTrace();
+						  } catch (MqttException e) {
+							  e.printStackTrace();
+						  }
+					  }else{
+						  code = 1;
+						  errorMsg = "Nome menor que 4";
+					  }
+				  } else { 
 					  code = 1;
-					  errorMsg = "Nome menor que 4";
+					  errorMsg = "Disciplina nao cadastrado";
 				  }
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			  Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 			  responseObserver.onNext(status);
 			  responseObserver.onCompleted();
@@ -570,33 +589,36 @@ public class PortalAdministrativoServer {
 		  @Override
 		  public void removeDisciplina(Identificador req, StreamObserver<Status> responseObserver) {
 			  String sigla = req.getId();
-			  int code;
+			  int code = 1;
 			  String errorMsg = "";
 			  //Validacao
-			  if(!Banco.disciplinas.containsKey(sigla)){ //Se disciplina não existe
-				  code = 1;
-				  errorMsg = "Disciplina nao cadastrado";
-			  }else{
-//					for (String alunosID : Banco.disciplinaAlunos.get(sigla)) {
-//						Banco.alunoDisciplinas.get(alunosID).remove(sigla);
-//					}
-//					Banco.professorDisciplinas.get(Banco.disciplinaProfessor.get(sigla)).remove(sigla);
-//					Banco.disciplinaProfessor.remove(sigla);
-//					Banco.disciplinas.remove(sigla);
-				  code = 0;
-				  errorMsg = "";
-					//Json
-					JsonObject jsonObject = new JsonObject();
-					jsonObject.addProperty("sigla", sigla);
-					//Mqtt
-					try {
-						PortalAdministrativoServer.mqtt.cliente.publish("disciplina/delete", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-					} catch (MqttPersistenceException e) {
-						e.printStackTrace();
-					} catch (MqttException e) {
-						e.printStackTrace();
-					}
-			  }
+			  try {
+				if(Banco.disciplinas.containsKey(sigla) || !ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("disciplinas:get:" + sigla)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){//Se disciplina existe
+					  code = 0;
+					  errorMsg = "";
+					  //Json
+					  JsonObject jsonObject = new JsonObject();
+					  jsonObject.addProperty("sigla", sigla);
+						//Ratis
+						RaftClientReply getValue;
+						getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("disciplina:delete:"+jsonObject.toString()));
+						String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+						System.out.println("Resposta:" + response);
+					  //Mqtt
+					  try {
+						  PortalAdministrativoServer.mqtt.cliente.publish("disciplina/delete", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+					  } catch (MqttPersistenceException e) {
+						  e.printStackTrace();
+					  } catch (MqttException e) {
+						  e.printStackTrace();
+					  }
+				  }else{
+					  code = 1;
+					  errorMsg = "Disciplina nao cadastrado";
+				  }
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			  Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 			  responseObserver.onNext(status);
 			  responseObserver.onCompleted();
@@ -605,13 +627,24 @@ public class PortalAdministrativoServer {
 		  @Override
 		  public void obtemDisciplina(Identificador req, StreamObserver<Disciplina> responseObserver) {
 			  String sigla = req.getId();
-			  Disciplina disciplinaResponse;
+			  Disciplina disciplinaResponse = null;
 			  //Validacao
-			  if(!Banco.disciplinas.containsKey(sigla)){ //Se aluno não existe
-				  disciplinaResponse = Disciplina.newBuilder().setSigla(" ").setNome(" ").build();
-			  }else{
+			  if(Banco.disciplinas.containsKey(sigla)){ //Se aluno não existe
 				  DisciplinaModel disciplina = Banco.disciplinas.get(sigla);
 				  disciplinaResponse = Disciplina.newBuilder().setSigla(sigla).setNome(disciplina.getNome()).setVagas(disciplina.getVagas()).build();
+			  }else { 
+				  try {
+					String nome = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("disciplinas:get:" + sigla)).getMessage().getContent().toString(Charset.defaultCharset()); 
+					if (!nome.isEmpty()){ //Se professor existe) { //LevelDB
+						String[] valores = nome.split(":");
+						disciplinaResponse = Disciplina.newBuilder().setSigla(sigla).setNome(valores[0]).setVagas(Integer.valueOf(valores[1])).build();
+						
+			  		}else{
+					  disciplinaResponse = Disciplina.newBuilder().setSigla(" ").setNome(" ").build();
+			  		}
+				  } catch (IOException e) {
+					  e.printStackTrace();
+				  }	
 			  }
 			  responseObserver.onNext(disciplinaResponse);
 			  responseObserver.onCompleted();
@@ -619,15 +652,39 @@ public class PortalAdministrativoServer {
 		  
 		  @Override
 		  public void obtemTodasDisciplinas(Vazia req, StreamObserver<Disciplina> responseObserver) {
+			  try {
+				  if(Banco.disciplinas.size() != 0 &&
+							(Integer.valueOf(ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("disciplinas:getsize:")).getMessage().getContent().toString(Charset.defaultCharset()))
+									+Integer.valueOf(ratisClient.clusters.get(1).io().sendReadOnly(Message.valueOf("disciplinas:getsize:")).getMessage().getContent().toString(Charset.defaultCharset()))
+									== Banco.disciplinas.size()) ) {
+					  for (String sigla : Banco.disciplinas.keySet()) {
+						  DisciplinaModel disciplina = Banco.disciplinas.get(sigla);
+						  Disciplina disciplinaResponse = Disciplina.newBuilder().setSigla(sigla).setNome(disciplina.getNome()).setVagas(disciplina.getVagas()).build();
+						  responseObserver.onNext(disciplinaResponse);
+					  }
+				  }else {
+						String responseC0 =ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("disciplinas:getall:")).getMessage().getContent().toString(Charset.defaultCharset());
+						String responseC1 =ratisClient.clusters.get(1).io().sendReadOnly(Message.valueOf("disciplinas:getall:")).getMessage().getContent().toString(Charset.defaultCharset());
+						String[] disciplinas = (responseC0+","+responseC1).split(",");
+						for (String disciplina : disciplinas) {
+							String[] disc = disciplina.split("=");
+							String[] valores = disc[1].split(":");
+							String nome = valores[0];
+							int vagas = Integer.valueOf(valores[1]);
+							String sigla = disc[0].split(":")[1];
+							Disciplina disciplinaResponse = Disciplina.newBuilder().setSigla(sigla).setNome(nome).setVagas(vagas).build();
+							responseObserver.onNext(disciplinaResponse);	
+						}
+					}
+			  } catch (NumberFormatException e) {
+				e.printStackTrace();
+			  } catch (IOException e) {
+				e.printStackTrace();
+			  }
 			  if(Banco.disciplinas.size() == 0) {
 //				  Disciplina disciplinaResponse = Disciplina.newBuilder().setSigla(" ").setNome(" ").build();
 //				  responseObserver.onNext(disciplinaResponse);
 			  }else {
-				  for (String sigla : Banco.disciplinas.keySet()) {
-					  DisciplinaModel disciplina = Banco.disciplinas.get(sigla);
-					  Disciplina professorResponse = Disciplina.newBuilder().setSigla(sigla).setNome(disciplina.getNome()).setVagas(disciplina.getVagas()).build();
-					  responseObserver.onNext(professorResponse);
-				  }
 			  }
 			  responseObserver.onCompleted();
 		  }

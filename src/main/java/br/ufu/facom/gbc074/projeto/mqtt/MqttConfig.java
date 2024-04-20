@@ -117,11 +117,15 @@ public class MqttConfig {
         		Banco.professores.put(siape, nome);
         		break;
         	case "delete":
-				for (String disciplinaID : Banco.professorDisciplinas.get(siape)) {
-					Banco.disciplinaProfessor.remove(disciplinaID);
-				}
-				Banco.professorDisciplinas.remove(siape);
-				Banco.professores.remove(siape);
+        		try {
+					for (String disciplinaID : Banco.professorDisciplinas.get(siape)) {
+						Banco.disciplinaProfessor.remove(disciplinaID);
+					}
+					Banco.professorDisciplinas.remove(siape);
+					Banco.professores.remove(siape);
+        		}catch (Exception e) {
+            		System.err.println("Não existe aqui");
+    			}
         		break;
             case "add":
 				Banco.disciplinaProfessor.put(sigla,siape);
@@ -140,22 +144,26 @@ public class MqttConfig {
         private void handleDisciplinaPayload(String operacao,JsonObject payload) {
     		String nome  = payload.has("nome") ? payload.get("nome").getAsString() : null;
     		String sigla = payload.has("sigla") ? payload.get("sigla").getAsString() : null;
-        	int vagas = payload.has("vagas") ? payload.get("vagas").getAsInt() : null;
+    		String vagas = payload.has("vagas") ? payload.get("vagas").getAsString() : null;
         	switch(operacao) {
         	case "create":
-        		Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
+        		Banco.disciplinas.put(sigla,new DisciplinaModel(nome,Integer.valueOf(vagas)));
         		Banco.disciplinaAlunos.put(sigla, new ArrayList<String>());
         		break;
         	case "update":
-        		Banco.disciplinas.put(sigla,new DisciplinaModel(nome,vagas));
+        		Banco.disciplinas.put(sigla,new DisciplinaModel(nome,Integer.valueOf(vagas)));
         		break;
         	case "delete":
-				for (String alunosID : Banco.disciplinaAlunos.get(sigla)) {
-					Banco.alunoDisciplinas.get(alunosID).remove(sigla);
-				}
-				Banco.professorDisciplinas.get(Banco.disciplinaProfessor.get(sigla)).remove(sigla);
-				Banco.disciplinaProfessor.remove(sigla);
-				Banco.disciplinas.remove(sigla);
+        		try {
+					for (String alunosID : Banco.disciplinaAlunos.get(sigla)) {
+						Banco.alunoDisciplinas.get(alunosID).remove(sigla);
+					}
+					Banco.professorDisciplinas.get(Banco.disciplinaProfessor.get(sigla)).remove(sigla);
+        		}catch (Exception e) {
+        			System.err.println("Não existe aqui");
+        		}
+					Banco.disciplinaProfessor.remove(sigla);
+					Banco.disciplinas.remove(sigla);
         		break;
         	default:
         		System.out.println("Erro ao receber Mqtt");

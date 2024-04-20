@@ -298,7 +298,7 @@ public class MaquinaDeEstados extends BaseStateMachine {
     private void handleDisciplinaPayload(String operacao,JsonObject payload) {
 		String nome  = payload.has("nome") ? payload.get("nome").getAsString() : null;
 		String sigla = payload.has("sigla") ? payload.get("sigla").getAsString() : null;
-    	int vagas = payload.has("vagas") ? payload.get("vagas").getAsInt() : null;
+    	String vagas = payload.has("vagas") ? payload.get("vagas").getAsString() : null;
     	switch(operacao) {
     	case "create":
         	this.db.put(("disciplinas:"+sigla).getBytes(), (nome+":"+vagas).getBytes());
@@ -312,29 +312,27 @@ public class MaquinaDeEstados extends BaseStateMachine {
     		this.db.put(("disciplinas:"+sigla).getBytes(), (nome+":"+vagas).getBytes());
     		break;
     	case "delete":
-        	String disciplinaAlunos = new String(this.db.get(("disciplinaAlunos:"+sigla).getBytes()));
-        	List<String> disciplinaAlunosList = new Gson().fromJson(disciplinaAlunos, new TypeToken<List<String>>(){}.getType());
-        	for (String alunoID : disciplinaAlunosList) {
-                String alunoDisciplinas = new String(this.db.get(("alunoDisciplinas:"+alunoID).getBytes()));
-                List<String> alunoDisciplinasList = new Gson().fromJson(alunoDisciplinas, new TypeToken<List<String>>(){}.getType());
-                alunoDisciplinasList.remove(sigla);
-                this.db.put(("alunoDisciplinas:"+alunoID).getBytes(), new Gson().toJson(alunoDisciplinasList).getBytes());
-			}
-        	String siape = new String(this.db.get(("disciplinaProfessor:"+sigla).getBytes()));
-        	
-        	String professorDisciplinas = new String(this.db.get(("professorDisciplinas:"+siape).getBytes()));
-        	List<String> professorDisciplinasList = new Gson().fromJson(professorDisciplinas, new TypeToken<List<String>>(){}.getType());
-        	professorDisciplinasList.remove(sigla);
-        	this.db.put(("professorDisciplinas:"+siape).getBytes(), new Gson().toJson(professorDisciplinasList).getBytes());
-        	this.db.delete(("disciplinaProfessor:"+sigla).getBytes());
-        	this.db.delete(("disciplinas:"+sigla).getBytes());
-        	//
-//			for (String alunosID : Banco.disciplinaAlunos.get(sigla)) {
-//				Banco.alunoDisciplinas.get(alunosID).remove(sigla);
-//			}
-//			Banco.professorDisciplinas.get(Banco.disciplinaProfessor.get(sigla)).remove(sigla);
-//			Banco.disciplinaProfessor.remove(sigla);
-//			Banco.disciplinas.remove(sigla);
+    		System.out.println("chegando aqui?");
+    		try {
+	        	String disciplinaAlunos = new String(this.db.get(("disciplinaAlunos:"+sigla).getBytes()));
+	        	List<String> disciplinaAlunosList = new Gson().fromJson(disciplinaAlunos, new TypeToken<List<String>>(){}.getType());
+	        	for (String alunoID : disciplinaAlunosList) {
+	                String alunoDisciplinas = new String(this.db.get(("alunoDisciplinas:"+alunoID).getBytes()));
+	                List<String> alunoDisciplinasList = new Gson().fromJson(alunoDisciplinas, new TypeToken<List<String>>(){}.getType());
+	                alunoDisciplinasList.remove(sigla);
+	                this.db.put(("alunoDisciplinas:"+alunoID).getBytes(), new Gson().toJson(alunoDisciplinasList).getBytes());
+				}
+	        	String siape = new String(this.db.get(("disciplinaProfessor:"+sigla).getBytes()));
+	        	
+	        	String professorDisciplinas = new String(this.db.get(("professorDisciplinas:"+siape).getBytes()));
+	        	List<String> professorDisciplinasList = new Gson().fromJson(professorDisciplinas, new TypeToken<List<String>>(){}.getType());
+	        	professorDisciplinasList.remove(sigla);
+	        	this.db.put(("professorDisciplinas:"+siape).getBytes(), new Gson().toJson(professorDisciplinasList).getBytes());
+    		}catch (Exception e) {
+    			System.err.println("Não existe aqui");
+    		}
+	        	this.db.delete(("disciplinaProfessor:"+sigla).getBytes());
+	        	this.db.delete(("disciplinas:"+sigla).getBytes());
     		break;
     	default:
     		System.out.println("Erro");
