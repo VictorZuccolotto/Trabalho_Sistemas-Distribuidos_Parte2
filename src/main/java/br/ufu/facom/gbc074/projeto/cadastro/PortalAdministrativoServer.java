@@ -127,7 +127,7 @@ public class PortalAdministrativoServer {
 			 } else 
 			if(nome.length() >= 4 && matricula.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4 matricula.hashCode()%2
 				try {
-					String responseGet = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset());
+					String responseGet = ratisClient.clusters.get(matricula.hashCode()%2).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset());
 					if(responseGet.isEmpty()) {
 						System.out.println("Nao existe no cluster, tentando inserir");
 //				if(nao existe no leveldb) else errorMsg = "Aluno ja cadastrado"; e colocar no cache
@@ -138,7 +138,7 @@ public class PortalAdministrativoServer {
 						jsonObject.addProperty("nome", nome);
 						//Ratis
 							RaftClientReply getValue;
-							getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("aluno:create:"+jsonObject.toString()));
+							getValue = ratisClient.clusters.get(matricula.hashCode()%2).io().send(Message.valueOf("aluno:create:"+jsonObject.toString()));
 							String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
 							System.out.println("Resposta:" + response);
 						//Mqtt
@@ -174,7 +174,7 @@ public class PortalAdministrativoServer {
 			String errorMsg = "";
 			//Validacao
 			 try {
-				if(Banco.alunos.containsKey(matricula) || !ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //inLevelDB
+				if(Banco.alunos.containsKey(matricula) || !ratisClient.clusters.get(matricula.hashCode()%2).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //inLevelDB
 					 if(nome.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4
 						code = 0;
 						//Json
@@ -183,7 +183,7 @@ public class PortalAdministrativoServer {
 						jsonObject.addProperty("nome", nome);
 						//Ratis
 						RaftClientReply getValue;
-						getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("aluno:update:"+jsonObject.toString()));
+						getValue = ratisClient.clusters.get(matricula.hashCode()%2).io().send(Message.valueOf("aluno:update:"+jsonObject.toString()));
 						String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
 						System.out.println("Resposta:" + response);
 						//Mqtt
@@ -218,7 +218,7 @@ public class PortalAdministrativoServer {
 			String errorMsg = "";
 			//Validacao
 				try {
-					if(Banco.alunos.containsKey(matricula) || !ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()) {
+					if(Banco.alunos.containsKey(matricula) || !ratisClient.clusters.get(matricula.hashCode()%2).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()) {
 						code = 0;
 						errorMsg = "";
 						//Json
@@ -226,7 +226,7 @@ public class PortalAdministrativoServer {
 						jsonObject.addProperty("matricula", matricula);
 						//Ratis
 						RaftClientReply getValue;
-						getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("aluno:delete:"+jsonObject.toString()));
+						getValue = ratisClient.clusters.get(matricula.hashCode()%2).io().send(Message.valueOf("aluno:delete:"+jsonObject.toString()));
 						String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
 						System.out.println("Resposta:" + response);
 						//Mqtt
@@ -258,7 +258,7 @@ public class PortalAdministrativoServer {
 				 alunoResponse = Aluno.newBuilder().setMatricula(matricula).setNome(Banco.alunos.get(matricula)).build();
 			 } else
 				try {
-					String nome = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset()); 
+					String nome = ratisClient.clusters.get(matricula.hashCode()%2).io().sendReadOnly(Message.valueOf("alunos:get:" + matricula)).getMessage().getContent().toString(Charset.defaultCharset()); 
 					if (!nome.isEmpty()){ //Se aluno não existe) { //LevelDB
 						alunoResponse = Aluno.newBuilder().setMatricula(matricula).setNome(nome).build();
 					}else{
@@ -318,7 +318,7 @@ public class PortalAdministrativoServer {
 			  } else 
 				  if(nome.length() >= 4 && siape.length() >= 4){ //Caso contrario e tenha nome e siape maior que 4
 					  try {
-						String responseGet = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset());
+						String responseGet = ratisClient.clusters.get(siape.hashCode()%2).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset());
 						if(responseGet.isEmpty()) {
 						  code = 0;
 						  //Json
@@ -327,7 +327,7 @@ public class PortalAdministrativoServer {
 						  jsonObject.addProperty("nome", nome);
 						//Ratis
 						RaftClientReply getValue;
-						getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("professor:create:"+jsonObject.toString()));
+						getValue = ratisClient.clusters.get(siape.hashCode()%2).io().send(Message.valueOf("professor:create:"+jsonObject.toString()));
 						String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
 						System.out.println("Resposta:" + response);
 						  //Mqtt
@@ -362,7 +362,7 @@ public class PortalAdministrativoServer {
 			  String errorMsg = "";
 			  //Validacao
 			  try {
-				if(Banco.professores.containsKey(siape) || !ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se professor existe
+				if(Banco.professores.containsKey(siape) || !ratisClient.clusters.get(siape.hashCode()%2).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se professor existe
 					  if(nome.length() >= 4){ //Caso contrario e tenha nome e matricula maior que 4
 						  code = 0;
 						  //Json
@@ -371,7 +371,7 @@ public class PortalAdministrativoServer {
 						  jsonObject.addProperty("nome", nome);
 							//Ratis
 							RaftClientReply getValue;
-							getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("professor:update:"+jsonObject.toString()));
+							getValue = ratisClient.clusters.get(siape.hashCode()%2).io().send(Message.valueOf("professor:update:"+jsonObject.toString()));
 							String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
 							System.out.println("Resposta:" + response);
 						  //Mqtt
@@ -405,7 +405,7 @@ public class PortalAdministrativoServer {
 			  String errorMsg = "";
 			  //Validacao
 			  try {
-				if(Banco.professores.containsKey(siape) || !ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se professor não existe
+				if(Banco.professores.containsKey(siape) || !ratisClient.clusters.get(siape.hashCode()%2).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se professor não existe
 					code = 0;
 					errorMsg = "";
 					//Json
@@ -413,7 +413,7 @@ public class PortalAdministrativoServer {
 					jsonObject.addProperty("siape", siape);
 					//Ratis
 					RaftClientReply getValue;
-					getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("professor:delete:"+jsonObject.toString()));
+					getValue = ratisClient.clusters.get(siape.hashCode()%2).io().send(Message.valueOf("professor:delete:"+jsonObject.toString()));
 					String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
 					System.out.println("Resposta:" + response);
 					//Mqtt
@@ -445,7 +445,7 @@ public class PortalAdministrativoServer {
 				  professorResponse = Professor.newBuilder().setSiape(siape).setNome(Banco.professores.get(siape)).build();
 			  }else{
 				  try {
-						String nome = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset()); 
+						String nome = ratisClient.clusters.get(siape.hashCode()%2).io().sendReadOnly(Message.valueOf("professores:get:" + siape)).getMessage().getContent().toString(Charset.defaultCharset()); 
 						if (!nome.isEmpty()){ //Se professor existe) { //LevelDB
 							professorResponse = Professor.newBuilder().setSiape(siape).setNome(nome).build();
 						}else {
@@ -503,7 +503,7 @@ public class PortalAdministrativoServer {
 					errorMsg = "Disciplina ja cadastrado";
 				} else if (nome.length() > 4 && sigla.length() > 4) { // Caso contrario e tenha nome e sigla maior que 4
 					try {
-						String responseGet = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("disciplinas:get:" + sigla)).getMessage().getContent().toString(Charset.defaultCharset());
+						String responseGet = ratisClient.clusters.get(sigla.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinas:get:" + sigla)).getMessage().getContent().toString(Charset.defaultCharset());
 						if (responseGet.isEmpty()) {
 							code = 0;
 							// Json
@@ -513,7 +513,7 @@ public class PortalAdministrativoServer {
 							jsonObject.addProperty("vagas", vagas);
 							//Ratis
 							RaftClientReply getValue;
-							getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("disciplina:create:"+jsonObject.toString()));
+							getValue = ratisClient.clusters.get(sigla.hashCode()%2).io().send(Message.valueOf("disciplina:create:"+jsonObject.toString()));
 							String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
 							System.out.println("Resposta:" + response);
 							// Mqtt
@@ -549,7 +549,7 @@ public class PortalAdministrativoServer {
 			  String errorMsg = "";
 			  //Validacao
 			  try {
-				if(Banco.disciplinas.containsKey(sigla) || !ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("disciplinas:get:" + sigla)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){//Se disciplina existe
+				if(Banco.disciplinas.containsKey(sigla) || !ratisClient.clusters.get(sigla.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinas:get:" + sigla)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){//Se disciplina existe
 					  if(nome.length() > 4){ //Caso contrario e tenha nome e matricula maior que 4
 						  code = 0;
 						  //Json
@@ -559,7 +559,7 @@ public class PortalAdministrativoServer {
 						  jsonObject.addProperty("vagas", vagas);
 							//Ratis
 							RaftClientReply getValue;
-							getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("disciplina:update:"+jsonObject.toString()));
+							getValue = ratisClient.clusters.get(sigla.hashCode()%2).io().send(Message.valueOf("disciplina:update:"+jsonObject.toString()));
 							String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
 							System.out.println("Resposta:" + response);
 						  //Mqtt
@@ -601,7 +601,7 @@ public class PortalAdministrativoServer {
 					  jsonObject.addProperty("sigla", sigla);
 						//Ratis
 						RaftClientReply getValue;
-						getValue = ratisClient.clusters.get(0).io().send(Message.valueOf("disciplina:delete:"+jsonObject.toString()));
+						getValue = ratisClient.clusters.get(sigla.hashCode()%2).io().send(Message.valueOf("disciplina:delete:"+jsonObject.toString()));
 						String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
 						System.out.println("Resposta:" + response);
 					  //Mqtt
@@ -634,7 +634,7 @@ public class PortalAdministrativoServer {
 				  disciplinaResponse = Disciplina.newBuilder().setSigla(sigla).setNome(disciplina.getNome()).setVagas(disciplina.getVagas()).build();
 			  }else { 
 				  try {
-					String nome = ratisClient.clusters.get(0).io().sendReadOnly(Message.valueOf("disciplinas:get:" + sigla)).getMessage().getContent().toString(Charset.defaultCharset()); 
+					String nome = ratisClient.clusters.get(sigla.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinas:get:" + sigla)).getMessage().getContent().toString(Charset.defaultCharset()); 
 					if (!nome.isEmpty()){ //Se professor existe) { //LevelDB
 						String[] valores = nome.split(":");
 						disciplinaResponse = Disciplina.newBuilder().setSigla(sigla).setNome(valores[0]).setVagas(Integer.valueOf(valores[1])).build();

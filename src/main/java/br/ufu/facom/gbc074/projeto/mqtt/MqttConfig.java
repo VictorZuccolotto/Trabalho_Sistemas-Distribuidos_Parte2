@@ -129,11 +129,20 @@ public class MqttConfig {
         		break;
             case "add":
 				Banco.disciplinaProfessor.put(sigla,siape);
-				Banco.professorDisciplinas.get(siape).add(sigla);
+				try {
+					Banco.professorDisciplinas.get(siape).add(sigla);
+				}catch (Exception e) {
+					Banco.professorDisciplinas.put(siape, new ArrayList<String>());
+					Banco.professorDisciplinas.get(siape).add(sigla);
+				}
             	break;
             case "remove":
 				Banco.disciplinaProfessor.remove(sigla);
-				Banco.professorDisciplinas.get(siape).remove(sigla);
+				try {
+					Banco.professorDisciplinas.get(siape).remove(sigla);
+				}catch (Exception e) {
+					Banco.professorDisciplinas.put(siape, new ArrayList<String>());
+				}
             	break;
         	default:
         		System.out.println("Erro ao receber Mqtt");

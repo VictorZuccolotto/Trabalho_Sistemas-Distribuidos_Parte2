@@ -2,10 +2,13 @@
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import org.apache.ratis.protocol.Message;
+import org.apache.ratis.protocol.RaftClientReply;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
@@ -15,6 +18,7 @@ import com.google.gson.JsonObject;
 
 import br.ufu.facom.gbc074.projeto.bd.Banco;
 import br.ufu.facom.gbc074.projeto.mqtt.MqttConfig;
+import br.ufu.facom.gbc074.projeto.ratis.RatisClient;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -23,6 +27,8 @@ public class PortalMatriculaServer {
 	  private static final Logger logger = Logger.getLogger(PortalMatriculaServer.class.getName());
 
 	  private Server server;
+	  
+	  public static RatisClient ratisClient = new RatisClient();
 	  
 	  public static Gson gson = new Gson();
 	  
@@ -110,34 +116,41 @@ public class PortalMatriculaServer {
 	    public void adicionaProfessor(DisciplinaPessoa req, StreamObserver<Status> responseObserver) {
 			String professorID = req.getIdPessoa();
 			String disciplinaID = req.getDisciplina();
-			int code;
+			int code = 1;
 			String errorMsg = "";
 			//Validacao
-			 if(!Banco.professores.containsKey(professorID)){ //Se professor nao existe
-			 	code = 1;
-			 	errorMsg = "Professor nao cadastrado";
-			 }else if(!Banco.disciplinas.containsKey(disciplinaID)){ //Se disciplina nao existe
-			 	code = 1;
-			 	errorMsg = "Disciplina nao cadastrada";
-			 }else if(Banco.disciplinaProfessor.containsKey(disciplinaID)){ //Caso disciplina já tenha um professor
-				 code = 1;
-				 errorMsg = "Disciplina ja possui um professor associado";
-			}else{
-				code = 0;
-//				Banco.disciplinaProfessor.put(disciplinaID,professorID);
-//				Banco.professorDisciplinas.get(professorID).add(disciplinaID);
-				//Json
-				JsonObject jsonObject = new JsonObject();
-				jsonObject.addProperty("siape", professorID);
-				jsonObject.addProperty("sigla", disciplinaID);
-				//Mqtt
-				try {
-					PortalMatriculaServer.mqtt.cliente.publish("professor/add", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-				} catch (MqttPersistenceException e) {
-					e.printStackTrace();
-				} catch (MqttException e) {
-					e.printStackTrace();
+			 try {
+				if(!Banco.professores.containsKey(professorID) && ratisClient.clusters.get(professorID.hashCode()%2).io().sendReadOnly(Message.valueOf("professores:get:" + professorID)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se professor nao existe
+				 	code = 1;
+				 	errorMsg = "Professor nao cadastrado";
+				 }else if(!Banco.disciplinas.containsKey(disciplinaID) && ratisClient.clusters.get(professorID.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinas:get:" + disciplinaID)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se disciplina nao existe
+				 	code = 1;
+				 	errorMsg = "Disciplina nao cadastrada";
+				 }else if(Banco.disciplinaProfessor.containsKey(disciplinaID) && ratisClient.clusters.get(professorID.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinaProfessor:get:" + disciplinaID)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Caso disciplina já tenha um professor
+					 code = 1;
+					 errorMsg = "Disciplina ja possui um professor associado";
+				}else{
+					code = 0;
+					//Json
+					JsonObject jsonObject = new JsonObject();
+					jsonObject.addProperty("siape", professorID);
+					jsonObject.addProperty("sigla", disciplinaID);
+					//Ratis
+					RaftClientReply getValue;
+					getValue = ratisClient.clusters.get(professorID.hashCode()%2).io().send(Message.valueOf("professor:add:"+jsonObject.toString()));
+					String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+					System.out.println("Resposta:" + response);
+					//Mqtt
+					try {
+						PortalMatriculaServer.mqtt.cliente.publish("professor/add", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+					} catch (MqttPersistenceException e) {
+						e.printStackTrace();
+					} catch (MqttException e) {
+						e.printStackTrace();
+					}
 				}
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 			Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 	      responseObserver.onNext(status);
@@ -148,37 +161,44 @@ public class PortalMatriculaServer {
 	    public void removeProfessor(DisciplinaPessoa req, StreamObserver<Status> responseObserver) {
 			String professorID = req.getIdPessoa();
 			String disciplinaID = req.getDisciplina();
-			int code;
+			int code = 1;
 			String errorMsg = "";
 			//Validacao
-			 if(!Banco.professores.containsKey(professorID)){ //Se professor nao existe
-			 	code = 1;
-			 	errorMsg = "Professor nao cadastrado";
-			 }else if(!Banco.disciplinas.containsKey(disciplinaID)){ //Se disciplina nao existe
-			 	code = 1;
-			 	errorMsg = "Disciplina nao cadastrada";
-			 }else if(!Banco.disciplinaProfessor.containsKey(disciplinaID)){ //Caso disciplina não tenha um professor
-				 code = 1;
-				 errorMsg = "Disciplina nao possui um professor";
-			 }else if(!Banco.disciplinaProfessor.get(disciplinaID).equals(professorID)){
-				 code = 1;
-				 errorMsg = "Este professor nao esta associado a esta disciplina";
-			 }else{
-				code = 0;
-//				Banco.disciplinaProfessor.remove(disciplinaID);
-//				Banco.professorDisciplinas.get(professorID).remove(disciplinaID);
-				//Json
-				JsonObject jsonObject = new JsonObject();
-				jsonObject.addProperty("siape", professorID);
-				jsonObject.addProperty("sigla", disciplinaID);
-				//Mqtt
-				try {
-					PortalMatriculaServer.mqtt.cliente.publish("professor/remove", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-				} catch (MqttPersistenceException e) {
-					e.printStackTrace();
-				} catch (MqttException e) {
-					e.printStackTrace();
+			 try {
+				if(!Banco.professores.containsKey(professorID) && ratisClient.clusters.get(professorID.hashCode()%2).io().sendReadOnly(Message.valueOf("professores:get:" + professorID)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se professor nao existe
+				 	code = 1;
+				 	errorMsg = "Professor nao cadastrado";
+				 }else if(!Banco.disciplinas.containsKey(disciplinaID) && ratisClient.clusters.get(professorID.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinas:get:" + disciplinaID)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se disciplina nao existe
+				 	code = 1;
+				 	errorMsg = "Disciplina nao cadastrada";
+				 }else if(!Banco.disciplinaProfessor.containsKey(disciplinaID) && ratisClient.clusters.get(professorID.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinaProfessor:get:" + disciplinaID)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Caso disciplina não tenha um professor
+					 code = 1;
+					 errorMsg = "Disciplina nao possui um professor";
+				 }else if(!Banco.disciplinaProfessor.get(disciplinaID).equals(professorID) && ratisClient.clusters.get(professorID.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinaProfessor:get:" + disciplinaID)).getMessage().getContent().toString(Charset.defaultCharset()).equals(professorID)){
+					 code = 1;
+					 errorMsg = "Este professor nao esta associado a esta disciplina";
+				 }else{
+					code = 0;
+					//Json
+					JsonObject jsonObject = new JsonObject();
+					jsonObject.addProperty("siape", professorID);
+					jsonObject.addProperty("sigla", disciplinaID);
+					//Ratis
+					RaftClientReply getValue;
+					getValue = ratisClient.clusters.get(professorID.hashCode()%2).io().send(Message.valueOf("professor:remove:"+jsonObject.toString()));
+					String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+					System.out.println("Resposta:" + response);
+					//Mqtt
+					try {
+						PortalMatriculaServer.mqtt.cliente.publish("professor/remove", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+					} catch (MqttPersistenceException e) {
+						e.printStackTrace();
+					} catch (MqttException e) {
+						e.printStackTrace();
+					}
 				}
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 			Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 	      responseObserver.onNext(status);
@@ -188,38 +208,48 @@ public class PortalMatriculaServer {
 	    public void adicionaAluno(DisciplinaPessoa req, StreamObserver<Status> responseObserver) {
 	    	String alunoID = req.getIdPessoa();
 	    	String disciplinaID = req.getDisciplina();
-	    	int code = 2;
+	    	int code = 1;
 	    	String errorMsg = "";
 	    	//Validacao
-	    	if(!Banco.alunos.containsKey(alunoID)){ //Se alunoo nao existe
-	    		code = 1;
-	    		errorMsg = "Aluno nao cadastrado";
-	    	}else if(!Banco.disciplinas.containsKey(disciplinaID)){ //Se disciplina nao existe
-	    		code = 1;
-	    		errorMsg = "Disciplina nao cadastrada";
-	    	}else if(Banco.disciplinaAlunos.get(disciplinaID).contains(alunoID)){ //aluno ja faz parte da disciplina?
-	    		code = 1;
-	    		errorMsg = "Aluno ja matriculado na disciplina";
-	    	}else if(!(Banco.disciplinaAlunos.get(disciplinaID).size() < Banco.disciplinas.get(disciplinaID).getVagas())) { // Se cabe mais aluno na disciplina
-	    		code = 1;
-	    		errorMsg = "Disciplina "+Banco.disciplinas.get(disciplinaID).getNome()+" ja atingiu a capacidade maxima de "+Banco.disciplinas.get(disciplinaID).getVagas();	    	
-	    	}else{
-	    		code = 0;
+	    	try {
+				if(!Banco.alunos.containsKey(alunoID) && ratisClient.clusters.get(alunoID.hashCode()%2).io().sendReadOnly(Message.valueOf("alunos:get:" + alunoID)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se alunoo nao existe
+					code = 1;
+					errorMsg = "Aluno nao cadastrado";
+				}else if(!Banco.disciplinas.containsKey(disciplinaID) && ratisClient.clusters.get(alunoID.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinas:get:" + disciplinaID)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se disciplina nao existe
+					code = 1;
+					errorMsg = "Disciplina nao cadastrada";
+				}else if(Banco.disciplinaAlunos.get(disciplinaID).contains(alunoID) && ratisClient.clusters.get(alunoID.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinaAlunos:get:" + disciplinaID)).getMessage().getContent().toString(Charset.defaultCharset()).contains(alunoID)){ //aluno ja faz parte da disciplina?
+					code = 1;
+					errorMsg = "Aluno ja matriculado na disciplina";
+				}else if(!(Banco.disciplinaAlunos.get(disciplinaID).size() < Banco.disciplinas.get(disciplinaID).getVagas())) { // Se cabe mais aluno na disciplina
+					code = 1;
+					errorMsg = "Disciplina "+Banco.disciplinas.get(disciplinaID).getNome()+" ja atingiu a capacidade maxima de "+Banco.disciplinas.get(disciplinaID).getVagas();	    	
+				}else{
+					code = 0;
 //	    		Banco.disciplinaAlunos.get(disciplinaID).add(alunoID);
 //	    		Banco.alunoDisciplinas.get(alunoID).add(disciplinaID);
-				//Json
-				JsonObject jsonObject = new JsonObject();
-				jsonObject.addProperty("matricula", alunoID);
-				jsonObject.addProperty("sigla", disciplinaID);
-				//Mqtt
-				try {
-					PortalMatriculaServer.mqtt.cliente.publish("aluno/add", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-				} catch (MqttPersistenceException e) {
-					e.printStackTrace();
-				} catch (MqttException e) {
-					e.printStackTrace();
+					//Json
+					JsonObject jsonObject = new JsonObject();
+					jsonObject.addProperty("matricula", alunoID);
+					jsonObject.addProperty("sigla", disciplinaID);
+					//Ratis
+					RaftClientReply getValue;
+					getValue = ratisClient.clusters.get(alunoID.hashCode()%2).io().send(Message.valueOf("aluno:add:"+jsonObject.toString()));
+					String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+					System.out.println("Resposta:" + response);
+					//Mqtt
+					try {
+						PortalMatriculaServer.mqtt.cliente.publish("aluno/add", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+					} catch (MqttPersistenceException e) {
+						e.printStackTrace();
+					} catch (MqttException e) {
+						e.printStackTrace();
+					}
 				}
-	    	}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	    	Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 	    	responseObserver.onNext(status);
 	    	responseObserver.onCompleted();
@@ -229,35 +259,45 @@ public class PortalMatriculaServer {
 	    public void removeAluno(DisciplinaPessoa req, StreamObserver<Status> responseObserver) {
 	    	String alunoID = req.getIdPessoa();
 	    	String disciplinaID = req.getDisciplina();
-	    	int code;
+	    	int code = 1;
 	    	String errorMsg = "";
 	    	//Validacao
-	    	if(!Banco.alunos.containsKey(alunoID)){ //Se aluno nao existe
-	    		code = 1;
-	    		errorMsg = "Aluno nao cadastrado";
-	    	}else if(!Banco.disciplinas.containsKey(disciplinaID)){ //Se disciplina nao existe
-	    		code = 1;
-	    		errorMsg = "Disciplina nao cadastrada";
-	    	}else if(!Banco.disciplinaAlunos.get(disciplinaID).contains(alunoID)){ //aluno nao faz parte da disciplina
-	    		code = 1;
-	    		errorMsg = "Aluno nao matriculado na disciplina";
-	    	}else{
-	    		code = 0;
+	    	try {
+				if(!Banco.alunos.containsKey(alunoID) && ratisClient.clusters.get(alunoID.hashCode()%2).io().sendReadOnly(Message.valueOf("alunos:get:" + alunoID)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se aluno nao existe
+					code = 1;
+					errorMsg = "Aluno nao cadastrado";
+				}else if(!Banco.disciplinas.containsKey(disciplinaID) && ratisClient.clusters.get(alunoID.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinas:get:" + disciplinaID)).getMessage().getContent().toString(Charset.defaultCharset()).isEmpty()){ //Se disciplina nao existe
+					code = 1;
+					errorMsg = "Disciplina nao cadastrada";
+				}else if(!Banco.disciplinaAlunos.get(disciplinaID).contains(alunoID) && ratisClient.clusters.get(alunoID.hashCode()%2).io().sendReadOnly(Message.valueOf("disciplinaAlunos:get:" + disciplinaID)).getMessage().getContent().toString(Charset.defaultCharset()).contains(alunoID)){ //aluno nao faz parte da disciplina
+					code = 1;
+					errorMsg = "Aluno nao matriculado na disciplina";
+				}else{
+					code = 0;
 //	    		Banco.disciplinaAlunos.get(disciplinaID).remove(alunoID);
 //	    		Banco.alunoDisciplinas.get(alunoID).remove(disciplinaID);
-				//Json
-				JsonObject jsonObject = new JsonObject();
-				jsonObject.addProperty("matricula", alunoID);
-				jsonObject.addProperty("sigla", disciplinaID);
-				//Mqtt
-				try {
-					PortalMatriculaServer.mqtt.cliente.publish("aluno/remove", new MqttMessage(gson.toJson(jsonObject).getBytes()));
-				} catch (MqttPersistenceException e) {
-					e.printStackTrace();
-				} catch (MqttException e) {
-					e.printStackTrace();
+					//Json
+					JsonObject jsonObject = new JsonObject();
+					jsonObject.addProperty("matricula", alunoID);
+					jsonObject.addProperty("sigla", disciplinaID);
+					//Ratis
+					RaftClientReply getValue;
+					getValue = ratisClient.clusters.get(alunoID.hashCode()%2).io().send(Message.valueOf("aluno:remove:"+jsonObject.toString()));
+					String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+					System.out.println("Resposta:" + response);
+					//Mqtt
+					try {
+						PortalMatriculaServer.mqtt.cliente.publish("aluno/remove", new MqttMessage(gson.toJson(jsonObject).getBytes()));
+					} catch (MqttPersistenceException e) {
+						e.printStackTrace();
+					} catch (MqttException e) {
+						e.printStackTrace();
+					}
 				}
-	    	}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	    	Status status = Status.newBuilder().setStatus(code).setMsg(errorMsg).build();
 	    	responseObserver.onNext(status);
 	    	responseObserver.onCompleted();

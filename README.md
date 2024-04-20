@@ -1,18 +1,22 @@
 # TODO
 
 - [x] Implementar servidores Ratis
-- [] verificar conexao com servidores ratis
 - [x] bash bd.sh
 - [] bash bd.sh receber 0,1,2 como parametros e nao 1,2,3
 - [x] Fazer inserções e consultas para aluno
-- [] Fazer inserções e consultas para professor
-- [] Fazer inserções e consultas para disciplina
+- [x] Fazer inserções e consultas para professor
+- [x] Fazer inserções e consultas para disciplina
 - [x] Mudar banco de dados para de acordo
+- [ ] Portal Matricula inserções e consultas
 
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE)
+Faltou apenas o fazer o portal matricula se comunicar com os clusters nas consultas de relatorio (tempo)
+Portal Administrativo 100% operante
+
+
+<!-- [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE) -->
 Trabalho Sistemas distribuidos
 ==============================================
-O intuito do trabalho é a criação de dois servidores, um matricula e um administrativo.
+<!-- O intuito do trabalho é a criação de dois servidores, um matricula e um administrativo.
 E dois clientes, um para o servidor matricula e outro para o servidor administrativo.
 A comunicação entre cliente e servidor será via gRPC e a comunicação entre servidores será
 via MQTT.
@@ -20,13 +24,14 @@ via MQTT.
 O servidor administrativo será responsavel pela criação de alunos, professores e disciplinas.
 O servidor matricula será responsável pela alocaçao de alunos e professores em disciplinas.
 
-Um maior detalhamento do projeto pode ser encontrado [aqui](https://paulo-coelho.github.io/ds_notes/projeto/).
+Um maior detalhamento do projeto pode ser encontrado [aqui](https://paulo-coelho.github.io/ds_notes/projeto/). -->
 
 ## Requisitos
 
 - Java
 - Gradle
 - Servidor MQTT em localhost na por 1883
+- Portas livres 3000, 3200, 3400, 3600, 3800, 4000 para os servidores ratis
 
 ## Instruções de compilação
 
@@ -132,6 +137,14 @@ $ bash mat-client.sh --port 8001 --op rel_aluno --val aaaa
 ```
 
 ### Testando
+```
+$ bash cluster0.sh
+```
+
+```
+$ bash cluster1.sh
+```
+
 ```
 $ bash admin-server.sh 9001
 ```
