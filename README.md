@@ -9,6 +9,7 @@
 - [ ] Portal Matricula inserções e consultas
 
 Faltou apenas o fazer o portal matricula se comunicar com os clusters nas consultas de relatorio (tempo)
+
 Portal Administrativo 100% operante
 
 
