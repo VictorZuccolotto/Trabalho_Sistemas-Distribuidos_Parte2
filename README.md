@@ -1,12 +1,12 @@
 # TODO
 
 - [x] Implementar servidores Ratis
-- [] verificar conexao com servidores ratis
+- [ ] verificar conexao com servidores ratis
 - [x] bash bd.sh
-- [] bash bd.sh receber 0,1,2 como parametros e nao 1,2,3
+- [ ] bash bd.sh receber 0,1,2 como parametros e nao 1,2,3
 - [x] Fazer inserções e consultas para aluno
-- [] Fazer inserções e consultas para professor
-- [] Fazer inserções e consultas para disciplina
+- [ ] Fazer inserções e consultas para professor
+- [ ] Fazer inserções e consultas para disciplina
 - [x] Mudar banco de dados para de acordo
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE)
